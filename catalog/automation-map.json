@@ -1,0 +1,68 @@
+{
+  "description": "Implementasi starter; status runtime terpisah dari hasil manual. Tidak ada auto-sync sheet.",
+  "implementations": [
+    {
+      "testId": "TS-001",
+      "engine": "cypress",
+      "file": "cypress/e2e/auth/login.cy.ts",
+      "implementedScope": "Login valid via UI untuk role terkonfigurasi; assertion route dan dashboard ready.",
+      "remainingScope": "API login valid; konfirmasi seluruh role dan persyaratan rinci AC di staging.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Not Run"
+    },
+    {
+      "testId": "TS-002",
+      "engine": "cypress",
+      "file": "cypress/e2e/auth/login.cy.ts",
+      "implementedScope": "Penolakan field kosong melalui UI.",
+      "remainingScope": "Format invalid, kombinasi field, serta validasi API sesuai kontrak.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Not Run"
+    },
+    {
+      "testId": "TS-006",
+      "engine": "cypress",
+      "file": "cypress/e2e/auth/logout.cy.ts",
+      "implementedScope": "Logout UI dan akses ulang route dashboard tanpa session.",
+      "remainingScope": "Invalidasi token/server dan seluruh route/session lain sesuai AC.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Not Run"
+    },
+    {
+      "testId": "TS-072",
+      "engine": "cypress",
+      "file": "cypress/e2e/auth/password-visibility.cy.ts",
+      "implementedScope": "Toggle password type dan nilai terjaga.",
+      "remainingScope": "Verifikasi selector dan AC pada aplikasi EMS staging.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Not Run"
+    },
+    {
+      "testId": "TS-003",
+      "engine": "playwright",
+      "file": "playwright/tests/api/auth.spec.ts",
+      "implementedScope": "Password salah dan akun tidak dikenal dibandingkan status serta pesan API.",
+      "remainingScope": "Timing side channel, normalisasi seluruh response, serta role lain sesuai kebutuhan security review.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Not Run"
+    },
+    {
+      "testId": "TS-046",
+      "engine": "playwright",
+      "file": "playwright/tests/mobile/critical-flow.spec.ts",
+      "implementedScope": "Login-dashboard-logout 320 px; tombol logout dalam viewport dan halaman tanpa overflow.",
+      "remainingScope": "Alur kritis lain, menu/modal/tabel, keyboard mobile, dan perangkat nyata.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Not Run"
+    },
+    {
+      "testId": "TS-071",
+      "engine": "playwright",
+      "file": "playwright/tests/responsive/login-layout.spec.ts",
+      "implementedScope": "Form login pada 320, 768, 1280 px.",
+      "remainingScope": "Seluruh halaman serta batas breakpoint Tailwind aktual.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Not Run"
+    }
+  ]
+}

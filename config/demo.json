@@ -1,0 +1,21 @@
+{
+  "reviewed": true,
+  "routes": { "login": "/login", "dashboard": "/dashboard" },
+  "selectors": {
+    "email": "[data-testid=login-email]",
+    "password": "[data-testid=login-password]",
+    "submit": "[data-testid=login-submit]",
+    "validationError": "[data-testid=login-error]",
+    "togglePassword": "[data-testid=toggle-password]",
+    "dashboardReady": "[data-testid=dashboard-ready]",
+    "logout": "[data-testid=logout]"
+  },
+  "api": {
+    "enabled": true,
+    "loginPath": "/api/login",
+    "emailField": "email",
+    "passwordField": "password",
+    "messageField": "message",
+    "invalidAuthStatus": 401
+  }
+}

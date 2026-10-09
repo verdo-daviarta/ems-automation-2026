@@ -1,0 +1,5 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": { "types": ["cypress", "node"], "lib": ["ES2022", "DOM"] },
+  "include": ["../cypress.config.ts", "./**/*.ts", "../shared/**/*.ts"]
+}

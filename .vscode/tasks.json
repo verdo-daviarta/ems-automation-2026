@@ -1,0 +1,10 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "QA: Check framework", "type": "npm", "script": "check", "problemMatcher": [] },
+    { "label": "QA: Demo smoke", "type": "npm", "script": "test:demo", "problemMatcher": [] },
+    { "label": "QA: Cypress Open", "type": "npm", "script": "cy:open", "problemMatcher": [] },
+    { "label": "QA: Playwright UI", "type": "npm", "script": "pw:ui", "problemMatcher": [] },
+    { "label": "QA: Staging run", "type": "npm", "script": "test:staging", "problemMatcher": [] }
+  ]
+}

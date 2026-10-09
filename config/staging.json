@@ -1,0 +1,21 @@
+{
+  "reviewed": false,
+  "routes": { "login": "", "dashboard": "" },
+  "selectors": {
+    "email": "",
+    "password": "",
+    "submit": "",
+    "validationError": "",
+    "togglePassword": "",
+    "dashboardReady": "",
+    "logout": ""
+  },
+  "api": {
+    "enabled": false,
+    "loginPath": "",
+    "emailField": "",
+    "passwordField": "",
+    "messageField": "",
+    "invalidAuthStatus": 401
+  }
+}

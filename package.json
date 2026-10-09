@@ -1,0 +1,31 @@
+{
+  "name": "ems-qa-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EMS QA: Cypress primary, Playwright API/mobile companion",
+  "engines": { "node": "^22.0.0 || ^24.0.0 || >=26.0.0" },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "check": "npm run typecheck && npm run test:unit && npm run coverage:catalog",
+    "typecheck": "tsc -p tsconfig.json && tsc -p cypress/tsconfig.json && tsc -p playwright/tsconfig.json",
+    "test:unit": "node --test checks/settings.test.cjs checks/demo.test.mjs checks/editor.test.cjs",
+    "test": "npm run test:demo",
+    "test:demo": "node scripts/run.mjs demo all",
+    "demo:serve": "node demo/server.mjs",
+    "cy:open": "node scripts/run.mjs configured cypress-open",
+    "cy:run": "node scripts/run.mjs configured cypress",
+    "pw:run": "node scripts/run.mjs configured playwright",
+    "pw:ui": "node scripts/run.mjs configured playwright-ui",
+    "pw:report": "playwright show-report reports/playwright-html",
+    "test:staging": "node scripts/run.mjs staging all",
+    "coverage:catalog": "node scripts/catalog.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@types/node": "24.10.1",
+    "cypress": "16.1.1",
+    "dotenv": "17.2.3",
+    "typescript": "5.9.3"
+  }
+}
