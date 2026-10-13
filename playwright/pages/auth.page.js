@@ -1,9 +1,11 @@
-import { expect, type Page } from '@playwright/test';
-import type { Role, Settings } from '../../shared/types';
-
+import { expect } from '@playwright/test';
 export class AuthPage {
-  constructor(private page: Page, private settings: Settings) {}
-  async login(role: Role) {
+  /** @param {import('@playwright/test').Page} page */
+  constructor(page, settings) {
+    this.page = page;
+    this.settings = settings;
+  }
+  async login(role) {
     const { contract, credentials } = this.settings;
     await this.page.goto(contract.routes.login);
     await this.page.locator(contract.selectors.email).fill(credentials[role].email);

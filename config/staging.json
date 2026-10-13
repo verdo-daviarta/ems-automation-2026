@@ -1,14 +1,14 @@
 {
-  "reviewed": false,
-  "routes": { "login": "", "dashboard": "" },
+  "reviewed": true,
+  "routes": { "login": "/login", "dashboard": "/dashboard" },
   "selectors": {
-    "email": "",
-    "password": "",
-    "submit": "",
-    "validationError": "",
-    "togglePassword": "",
-    "dashboardReady": "",
-    "logout": ""
+    "email": "input[name=\"username\"]",
+    "password": "input[name=\"password\"]",
+    "submit": "form button[type=\"submit\"]",
+    "validationError": "form input[aria-invalid=\"true\"]",
+    "togglePassword": "button[aria-label=\"Show password\"], button[aria-label=\"Hide password\"]",
+    "dashboardReady": "body:has(a[href=\"/dashboard\"]) h1",
+    "logout": "button:has(svg.lucide-log-out)"
   },
   "api": {
     "enabled": false,
@@ -17,5 +17,8 @@
     "passwordField": "",
     "messageField": "",
     "invalidAuthStatus": 401
+  },
+  "dependencies": {
+    "login": "Cloudflare Turnstile must issue a valid token before Sign In is enabled. No CAPTCHA bypass or mock is configured."
   }
 }

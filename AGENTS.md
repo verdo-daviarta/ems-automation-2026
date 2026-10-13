@@ -2,6 +2,8 @@
 
 Bahasa komunikasi: Indonesia. Cypress adalah runner utama UI. Playwright melengkapi API, mobile, dan responsive. Dua runner tidak saling memanggil API browser.
 
+Source automation menggunakan JavaScript ES Modules (`.js`, `import/export`), helper CommonJS tetap `.cjs`, dan script Node tetap `.mjs`. Gunakan ekstensi file pada import relatif. Jangan menambahkan kembali source/dependency TypeScript tanpa permintaan pengguna.
+
 ## Sumber dan cakupan
 
 - `catalog/test-scenarios.json` adalah snapshot Test Planning-EMS-2026. Gunakan TS/FEAT ID aslinya.

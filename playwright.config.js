@@ -1,12 +1,9 @@
 import { defineConfig } from '@playwright/test';
 import { loadEnvironment, readSettings, publicSettings } from './shared/settings.cjs';
-import type { Settings } from './shared/types';
-
 loadEnvironment();
-const settings: Settings = readSettings();
+const settings = readSettings();
 export default defineConfig({
   testDir: './playwright/tests',
-  tsconfig: './playwright/tsconfig.json',
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
@@ -18,7 +15,7 @@ export default defineConfig({
     ['list'],
     ['html', { outputFolder: 'reports/playwright-html', open: 'never' }],
     ['junit', { outputFile: `reports/runs/${settings.runId}/playwright.xml` }],
-    ['./playwright/reporters/summary.ts', { settings: publicSettings(settings) }]
+    ['./playwright/reporters/summary.js', { settings: publicSettings(settings) }]
   ],
   use: {
     baseURL: settings.baseURL,
@@ -31,10 +28,10 @@ export default defineConfig({
     ignoreHTTPSErrors: false
   },
   projects: [
-    { name: 'api', testMatch: '**/api/**/*.spec.ts' },
-    { name: 'mobile-320', testMatch: '**/mobile/**/*.spec.ts',
+    { name: 'api', testMatch: '**/api/**/*.spec.js' },
+    { name: 'mobile-320', testMatch: '**/mobile/**/*.spec.js',
       use: { viewport: { width: 320, height: 720 }, isMobile: true, hasTouch: true } },
-    { name: 'responsive', testMatch: '**/responsive/**/*.spec.ts' }
+    { name: 'responsive', testMatch: '**/responsive/**/*.spec.js' }
   ],
   webServer: settings.target === 'demo' && process.env.QA_DEMO_MANAGED !== '1'
     ? { command: 'node demo/server.mjs', url: `${settings.baseURL}/health`, reuseExistingServer: false, timeout: 15000 }

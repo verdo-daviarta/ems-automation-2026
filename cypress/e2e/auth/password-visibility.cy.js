@@ -1,8 +1,6 @@
-import { LoginPage } from '../../pages/auth/LoginPage';
-
+import { LoginPage } from '../../pages/auth/LoginPage.js';
 describe('EMS UI authentication — password visibility @smoke', () => {
   const loginPage = new LoginPage();
-
   it('[TS-072] [FEAT-002] Password disembunyikan, ditampilkan, lalu disembunyikan kembali', () => {
     const probe = 'VisibilityProbe!123';
     loginPage.visit();

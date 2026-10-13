@@ -1,6 +1,6 @@
 # EMS QA Automation
 
-Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek TypeScript, dengan kontrak aplikasi dan Test ID yang sama.
+Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
 Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **7 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
 
@@ -35,51 +35,61 @@ Mulai pengembangan UI sehari-hari dari Cypress. Bila belum familiar dengan Playw
 
 ## Menghubungkan ke EMS staging
 
-URL, route, selector, dan kontrak API EMS belum diberikan. Konfigurasi staging sengaja belum direview dan tidak menggunakan selector demo sebagai asumsi.
+Target staging saat ini adalah `http://ems.10.70.0.45.nip.io/`, dengan release `v1.0.5-staging` yang diberikan pengguna. Route dan selector authentication pada `config/staging.json` sudah direview berdasarkan DOM dan source JavaScript yang disajikan aplikasi. Kontrak API masih disabled.
+
+Login memakai Cloudflare Turnstile: tombol Sign In baru aktif setelah token tersedia. Setelah tim FE memasang test sitekey, TS-001 berhasil untuk admin, pj, dan komandan, serta TS-002 berhasil; TS-006 masih gagal dengan `NEXT_REDIRECT` dari aplikasi. Tidak ada bypass atau mock CAPTCHA di automation. Detail hasil dan batas verifikasi ada di `docs/VALIDATION.md` dan laporan run staging.
 
 1. Isi `.env`:
 
 ```dotenv
 QA_TARGET=staging
-QA_BASE_URL=https://URL-STAGING-ANDA
-QA_API_BASE_URL=https://URL-API-STAGING-ANDA
-QA_BUILD_ID=versi-atau-commit-build
-QA_ROLES=admin
-QA_ADMIN_EMAIL=akun-qa-anda
-QA_ADMIN_PASSWORD=password-akun-qa
+QA_BASE_URL=http://ems.10.70.0.45.nip.io/
+QA_API_BASE_URL=
+QA_BUILD_ID=v1.0.5-staging
+QA_ROLES=admin,pj,komandan
+QA_ADMIN_ID=identifier-akun-qa-admin
+QA_ADMIN_PASSWORD="password-akun-qa-admin"
+QA_PJ_ID=identifier-akun-qa-pj
+QA_PJ_PASSWORD="password-akun-qa-pj"
+QA_KOMANDAN_ID=identifier-akun-qa-komandan
+QA_KOMANDAN_PASSWORD="password-akun-qa-komandan"
 QA_CYPRESS_BROWSER=chrome
 QA_PLAYWRIGHT_CHANNEL=chrome
 ```
 
-Jika frontend dan API satu base URL, `QA_API_BASE_URL` boleh kosong. Gunakan akun uji. Untuk menambah PJ dan user, set `QA_ROLES=admin,pj,user` lalu isi pasangan email/password setiap role. Laporan mencatat role yang benar-benar dikonfigurasi; hanya menjalankan admin belum membuktikan seluruh role.
+Ganti nilai contoh credential dengan akun QA sebenarnya. `QA_<ROLE>_ID` adalah identitas login (username/email sesuai aplikasi), dengan alias `_USERNAME` lalu `_EMAIL` sebagai fallback. Properti internal `credentials.email` dan `selectors.email` dipertahankan untuk kompatibilitas; bukan pembatasan bahwa ID wajib berformat email. Demo tetap menggunakan role fiktif `admin,pj,user`; staging dikonfigurasi `admin,pj,komandan`. Role `user` masih diterima untuk kompatibilitas, tetapi belum dibuktikan sebagai role deployment ini. Metadata roles mencatat konfigurasi, bukan bukti semua role telah diuji.
 
-2. Isi `config/staging.json` berdasarkan aplikasi yang nyata:
+Jika frontend dan API satu base URL, `QA_API_BASE_URL` boleh kosong. API test tetap Not Run selama kontrak disabled.
+
+2. Tinjau kembali `config/staging.json` bila aplikasi/build berubah:
 
 | Key | Yang dibutuhkan |
 | --- | --- |
 | `routes.login` | Path halaman login, diawali `/` |
 | `routes.dashboard` | Path landing page setelah login, tanpa query/hash |
-| `selectors.email`, `password`, `submit` | Selector unik field dan tombol login |
-| `selectors.validationError` | Elemen validasi yang benar-benar muncul pada submit kosong |
+| `selectors.email`, `password`, `submit` | Field bernama username/password dan tombol submit dalam form |
+| `selectors.validationError` | Input dengan aria-invalid=true; submit kosong telah diverifikasi pada TS-002 staging |
 | `selectors.togglePassword` | Tombol tampil/sembunyikan password |
-| `selectors.dashboardReady` | Elemen penanda dashboard selesai dimuat |
+| `selectors.dashboardReady` | Heading setelah navigasi dashboard tersedia; tidak cocok dengan heading hero login |
 | `selectors.logout` | Tombol logout yang dapat diklik pada keadaan halaman tersebut |
 
-Selector berupa CSS; utamakan `data-testid` yang disepakati. Jika logout berada di dropdown/menu atau login memakai SSO, ubah adapter `cypress/pages/auth/LoginPage.ts`, orchestration auth di `cypress/support/commands.ts`, dan `playwright/pages/auth.page.ts` agar mengikuti alur sesungguhnya. Jangan mengubah aplikasi atau AC untuk mengikuti demo.
+Selector berupa CSS; utamakan `data-testid` yang disepakati. Jika logout berada di dropdown/menu atau login memakai SSO, ubah adapter `cypress/pages/auth/LoginPage.js`, orchestration auth di `cypress/support/commands.js`, dan `playwright/pages/auth.page.js` agar mengikuti alur sesungguhnya. Jangan mengubah aplikasi atau AC untuk mengikuti demo.
 
 Untuk API TS-003, aktifkan `api.enabled=true` setelah kontraknya jelas. Isi login path, nama field email/password, nama field pesan error JSON pada tingkat teratas, dan HTTP status penolakan yang disepakati. Nilai `401` pada template adalah contoh yang harus direview. Jika API disabled, TS-003 dilaporkan **Not Run**, bukan Pass. Request TS-003 hanya dua percobaan login invalid per run; ini bukan uji login limiter atau brute force.
 
-3. Setelah semua route/selector direview, set `reviewed=true` pada `config/staging.json`.
+3. `reviewed=true` menunjukkan kontrak telah direview, bukan semua test staging Pass. Jangan mempertahankannya tanpa review jika kontrak route/selector berubah.
 4. Jalankan:
 
 ```powershell
 npm run doctor
-npm run cy:open
+npm run cy:run -- --spec cypress/e2e/auth/password-visibility.cy.js
+npm run pw:run -- --project=responsive
 ```
 
-Mulai dengan satu spec, cocokkan locator dan assertion terhadap AC. Lalu gunakan:
+Gunakan Cypress UI untuk inspeksi authentication, lalu perluas run sesuai scope:
 
 ```powershell
+npm run cy:open
 npm run cy:run
 npm run pw:run
 npm run test:staging
@@ -87,11 +97,13 @@ npm run test:staging
 
 `test:staging` selalu memilih staging, meskipun `.env` masih menyebut demo. Bila konfigurasi tidak lengkap, perintah gagal dengan pesan yang jelas; tidak fallback ke demo. `cy:open`, `cy:run`, `pw:run`, dan `pw:ui` mengikuti `QA_TARGET` pada `.env`.
 
+Untuk Cypress UI di Windows, gunakan `npm run cy:open`. Script ini membersihkan `ELECTRON_RUN_AS_NODE` dari proses Cypress. Jika menjalankan `npx cypress open` langsung dari PowerShell dan variabel itu bernilai `1`, hapus dari terminal tersebut terlebih dahulu dengan `Remove-Item Env:ELECTRON_RUN_AS_NODE`. Konfigurasi Cypress juga memasukkan host staging HTTP ke allowlist Chrome agar runner tidak terus dialihkan ke HTTPS dan memuat ulang.
+
 ## Menjalankan dan memeriksa hasil
 
 | Perintah | Fungsi |
 | --- | --- |
-| `npm run check` | TypeScript, diagnostik language server, guard konfigurasi, dan pemetaan catalog |
+| `npm run check` | Sintaks JavaScript, guard konfigurasi, reporter, dan pemetaan catalog |
 | `npm run test:demo` | Kedua runner pada aplikasi demo lokal |
 | `npm run cy:open` | Cypress UI interaktif |
 | `npm run cy:run` | Cypress headless pada target `.env` |
@@ -105,7 +117,7 @@ Contoh memilih proyek/spec:
 
 ```powershell
 npm run pw:run -- --project=mobile-320
-npm run cy:run -- --spec cypress/e2e/auth/login.cy.ts
+npm run cy:run -- --spec cypress/e2e/auth/login.cy.js
 ```
 
 VS Code juga menyediakan **Terminal → Run Task** untuk check, demo, Cypress, Playwright UI, dan staging. Extension **Playwright Test for VSCode** (`ms-playwright.playwright`) direkomendasikan oleh proyek. Untuk menjalankan Playwright langsung dari extension dalam mode demo, webServer config memulai demo pada port 4173. Tidak ada jadwal atau CI yang diaktifkan.
@@ -141,7 +153,7 @@ Credential tidak ditulis ke metadata laporan. Akan tetapi screenshot/trace dapat
 
 ```text
 config/                 Kontrak route, selector, dan API per target
-shared/                 Konfigurasi, tipe, dan format laporan bersama
+shared/                 Konfigurasi dan format laporan bersama
 cypress/e2e/auth/        Spec login, logout, password visibility (@smoke)
 cypress/pages/auth/      Page Object dengan selector dari kontrak aplikasi
 cypress/fixtures/        Data nonrahasia yang dipakai ulang bila diperlukan
@@ -158,32 +170,31 @@ scripts/                Setup dan command runner lintas OS
 AGENTS.md               Instruksi kerja untuk Codex
 ```
 
-`tsconfig.base.json` memakai `noEmit` dan pasangan `module`/`moduleResolution` `Node16`.
-TypeScript memeriksa source tanpa menulis ulang file `.cjs` bersama. `tsconfig.json`
-di root mengatur config runner dan shared types; setiap runner tetap mempunyai
-`tsconfig.json` sendiri. `npm run check` juga memeriksa diagnostik konfigurasi dan
-source melalui language server dependency project, sehingga error editor yang
-sebelumnya tidak terlihat oleh `tsc --noEmit` dapat ditemukan.
+File `.js` menggunakan ES Modules (`import/export`); helper `.cjs` dan script `.mjs` tetap digunakan.
+`jsconfig.json` hanya mengatur dukungan JavaScript di editor, tanpa compiler atau
+pemeriksaan tipe TypeScript. `npm run check` memeriksa sintaks menggunakan `node --check`,
+guard konfigurasi, HTTP demo, reporter, dan mapping catalog. Pemeriksaan sintaks
+tidak membuktikan import, tipe data, atau perilaku browser; jalankan demo untuk
+memverifikasi kedua runner setelah perubahan framework.
 
 Runner Cypress melepas `ELECTRON_RUN_AS_NODE` hanya dari child process Cypress.
 Terminal yang mewarisi variabel tersebut dapat menggunakan command project tanpa
-mengubah environment Windows. Jika panel Problems menyimpan diagnostik lama setelah
-config berubah, jalankan **TypeScript: Restart TS Server** melalui Command Palette.
+mengubah environment Windows.
 
 ### Pola pengembangan Cypress
 
 - **Spec (`e2e/<fitur>/`)** menyusun skenario, data uji, dan assertion expected result. Nama test tetap memuat TS/FEAT ID asli.
 - **Page Object (`pages/<fitur>/`)** menyediakan locator dan interaksi halaman. `LoginPage` mengambil selector dari `config/<target>.json`; tidak menyimpan credential, DOM element, atau session antar-test. Helper assertion route/readiness dipakai untuk sinkronisasi bersama.
-- **Custom command (`support/commands.ts`)** mengatur auth bersama melalui `cy.loginAs(role)` dan `cy.logoutEMS()`. Jangan menyalin login ke setiap Page Object.
+- **Custom command (`support/commands.js`)** mengatur auth bersama melalui `cy.loginAs(role)` dan `cy.logoutEMS()`. Jangan menyalin login ke setiap Page Object.
 - **Fixture (`fixtures/`)** hanya untuk data nonrahasia yang memang digunakan ulang. Credential tetap dari environment.
 
-Contoh spec login kosong dapat dibaca di `cypress/e2e/auth/login.cy.ts`: kunjungi halaman, submit, lalu assert error dan dashboard tidak tampil. Untuk fitur berikutnya, tambahkan folder spec dan Page Object ketika implementasi dimulai. Kedua runner tetap independen; Page Object Cypress tidak digunakan oleh Playwright.
+Contoh spec login kosong dapat dibaca di `cypress/e2e/auth/login.cy.js`: kunjungi halaman, submit, lalu assert error dan dashboard tidak tampil. Untuk fitur berikutnya, tambahkan folder spec dan Page Object ketika implementasi dimulai. Kedua runner tetap independen; Page Object Cypress tidak digunakan oleh Playwright.
 
 ## Melanjutkan melalui Codex di VS Code
 
 Buka Codex pada folder ini. `AGENTS.md` sudah memuat aturan QA, pemetaan Test ID, penjagaan credential, dan batas cakupan. Prompt awal yang dapat digunakan:
 
-> Baca README.md, AGENTS.md, catalog/automation-map.json, dan config/staging.json. Lanjutkan framework EMS ini dengan Cypress sebagai runner utama dan Playwright sebagai pelengkap. URL staging, route, serta selector akan saya berikan. Implementasikan adapter terhadap aplikasi nyata, jalankan check, lalu jalankan smoke pada staging yang dikonfigurasi. Jangan menganggap hasil demo sebagai hasil EMS. Laporkan Test ID, subcakupan, hasil, serta dependency yang belum siap. Jangan mengubah sheet atau membuat jadwal automation.
+> Baca README.md, AGENTS.md, catalog/automation-map.json, dan config/staging.json. Lanjutkan framework EMS ini dengan Cypress sebagai runner utama dan Playwright sebagai pelengkap. Staging dan kontrak UI telah dikonfigurasi; login masih memiliki dependency Turnstile. Tinjau bukti terbaru, jalankan check dan spec yang sesuai scope/dependency, lalu perluas adapter terhadap aplikasi nyata. Jangan menganggap hasil demo sebagai hasil EMS. Laporkan Test ID, subcakupan, hasil, serta dependency yang belum siap. Jangan mengubah sheet atau membuat jadwal automation.
 
 ## Memperluas regression
 
@@ -198,7 +209,7 @@ Perangkat yang masih offline/maintenance, pembuktian authorization/IDOR yang bel
 
 ## Versi dan referensi
 
-Dependency utama dikunci: Cypress 16.1.1, Playwright Test 1.64.0, TypeScript 5.9.3. Cypress memakai `cy.env()` untuk credential dan `Cypress.expose()` untuk konfigurasi publik; tidak memakai API `Cypress.env()` yang telah dihapus pada Cypress 16.
+Dependency utama dikunci: Cypress 16.1.1, Playwright Test 1.64.0. Cypress memakai `cy.env()` untuk credential dan `Cypress.expose()` untuk konfigurasi publik; tidak memakai API `Cypress.env()` yang telah dihapus pada Cypress 16.
 
 - [Dokumentasi Cypress: konfigurasi](https://docs.cypress.io/app/references/configuration)
 - [Dokumentasi Cypress: cy.env](https://docs.cypress.io/api/commands/env)
@@ -207,5 +218,3 @@ Dependency utama dikunci: Cypress 16.1.1, Playwright Test 1.64.0, TypeScript 5.9
 - [Sumber skenario EMS](https://docs.google.com/spreadsheets/d/1BDZLZis_2wGaVi9Oiv-3FqI33elyFFtfi3bME7K76qs/edit)
 
 Lihat `docs/VALIDATION.md` untuk hasil verifikasi paket yang dikirim.
-#   e m s - a u t o m a t i o n - 2 0 2 6  
- 

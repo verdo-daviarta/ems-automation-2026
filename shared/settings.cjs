@@ -13,6 +13,13 @@ function requireValue(env, key) {
   return env[key].trim();
 }
 
+function loginIdentity(env, role) {
+  const prefix = `QA_${role.toUpperCase()}`;
+  const key = [`${prefix}_ID`, `${prefix}_USERNAME`, `${prefix}_EMAIL`].find(name => env[name]?.trim());
+  if (!key) throw new Error(`${prefix}_ID belum diisi. Alias _USERNAME atau _EMAIL juga didukung.`);
+  return requireValue(env, key);
+}
+
 function httpUrl(value, name) {
   let url;
   try { url = new URL(value); } catch { throw new Error(`${name} harus berupa URL HTTP/HTTPS.`); }
@@ -31,12 +38,13 @@ function readSettings(env = process.env) {
   const baseURL = httpUrl(target === 'demo' ? demoUrl : requireValue(env, 'QA_BASE_URL'), 'QA_BASE_URL');
   const apiBaseURL = httpUrl(target === 'demo' ? demoUrl : (env.QA_API_BASE_URL || baseURL), 'QA_API_BASE_URL');
   const roles = target === 'demo' ? ['admin', 'pj', 'user'] : (env.QA_ROLES || 'admin').split(',').map(s => s.trim());
-  if (!roles.length || roles.some(r => !['admin', 'pj', 'user'].includes(r)) || new Set(roles).size !== roles.length) {
-    throw new Error('QA_ROLES harus daftar unik admin,pj,user.');
+  if (!roles.length || roles.some(r => !['admin', 'pj', 'komandan', 'user'].includes(r)) || new Set(roles).size !== roles.length) {
+    throw new Error('QA_ROLES harus daftar unik admin,pj,komandan,user.');
   }
   const credentials = Object.fromEntries(roles.map(role => [role, target === 'demo'
     ? { email: `${role}@ems-demo.test`, password: 'DemoOnly!12345' }
-    : { email: requireValue(env, `QA_${role.toUpperCase()}_EMAIL`), password: requireValue(env, `QA_${role.toUpperCase()}_PASSWORD`) }]));
+    // Properti email adalah nama internal lama; nilainya dapat berupa username/ID.
+    : { email: loginIdentity(env, role), password: requireValue(env, `QA_${role.toUpperCase()}_PASSWORD`) }]));
   if (!contract.reviewed) throw new Error('Kontrak config/staging.json belum direview. Isi route/selector nyata lalu set reviewed=true.');
   for (const [name, value] of Object.entries(contract.routes)) {
     if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || /[?#]/.test(value)) {

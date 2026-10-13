@@ -1,11 +1,8 @@
 import { defineConfig } from 'cypress';
 import { loadEnvironment, readSettings, publicSettings } from './shared/settings.cjs';
 import { testId, writeSummary } from './shared/reporting.cjs';
-import type { Settings } from './shared/types';
-
 loadEnvironment();
-const settings: Settings = readSettings();
-
+const settings = readSettings();
 export default defineConfig({
   expose: { qa: publicSettings(settings) },
   env: { credentials: settings.credentials },
@@ -22,12 +19,26 @@ export default defineConfig({
   reporterOptions: { mochaFile: `reports/runs/${settings.runId}/cypress-[hash].xml`, toConsole: false },
   e2e: {
     baseUrl: settings.baseURL,
-    specPattern: 'cypress/e2e/**/*.cy.ts',
-    supportFile: 'cypress/support/e2e.ts',
+    specPattern: 'cypress/e2e/**/*.cy.js',
+    supportFile: 'cypress/support/e2e.js',
     testIsolation: true,
     setupNodeEvents(on) {
+      on('before:browser:launch', (browser, launchOptions) => {
+        if (settings.target === 'staging' && settings.baseURL.startsWith('http:') &&
+            browser.family === 'chromium' && browser.name !== 'electron') {
+          // Keep Chrome on the HTTP staging origin used by the Cypress runner.
+          const host = new URL(settings.baseURL).hostname;
+          const preferences = launchOptions.preferences.default;
+          preferences.https_upgrades ??= {};
+          preferences.https_upgrades.policy ??= {};
+          const allowlist = preferences.https_upgrades.policy.http_allowlist ??= [];
+          if (!allowlist.includes(host)) allowlist.push(host);
+        }
+        return launchOptions;
+      });
       on('after:run', results => {
-        if (!('runs' in results)) return;
+        if (!('runs' in results))
+          return;
         const tests = results.runs.flatMap(run => run.tests.map(test => ({
           testId: testId(test.title.join(' ')), title: test.title.join(' > '),
           status: test.state === 'passed' ? 'Pass' : test.state === 'failed' ? 'Fail' : 'Not Run',

@@ -4,7 +4,7 @@
     {
       "testId": "TS-001",
       "engine": "cypress",
-      "file": "cypress/e2e/auth/login.cy.ts",
+      "file": "cypress/e2e/auth/login.cy.js",
       "implementedScope": "Login valid via UI untuk role terkonfigurasi; assertion route dan dashboard ready.",
       "remainingScope": "API login valid; konfirmasi seluruh role dan persyaratan rinci AC di staging.",
       "coverage": "starter-subscope",
@@ -13,7 +13,7 @@
     {
       "testId": "TS-002",
       "engine": "cypress",
-      "file": "cypress/e2e/auth/login.cy.ts",
+      "file": "cypress/e2e/auth/login.cy.js",
       "implementedScope": "Penolakan field kosong melalui UI.",
       "remainingScope": "Format invalid, kombinasi field, serta validasi API sesuai kontrak.",
       "coverage": "starter-subscope",
@@ -22,7 +22,7 @@
     {
       "testId": "TS-006",
       "engine": "cypress",
-      "file": "cypress/e2e/auth/logout.cy.ts",
+      "file": "cypress/e2e/auth/logout.cy.js",
       "implementedScope": "Logout UI dan akses ulang route dashboard tanpa session.",
       "remainingScope": "Invalidasi token/server dan seluruh route/session lain sesuai AC.",
       "coverage": "starter-subscope",
@@ -31,16 +31,22 @@
     {
       "testId": "TS-072",
       "engine": "cypress",
-      "file": "cypress/e2e/auth/password-visibility.cy.ts",
+      "file": "cypress/e2e/auth/password-visibility.cy.js",
       "implementedScope": "Toggle password type dan nilai terjaga.",
       "remainingScope": "Verifikasi selector dan AC pada aplikasi EMS staging.",
       "coverage": "starter-subscope",
-      "stagingVerification": "Not Run"
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-13T04-29-24-568Z-fa5971b8",
+        "scope": "implementedScope only; manual snapshot unchanged"
+      }
     },
     {
       "testId": "TS-003",
       "engine": "playwright",
-      "file": "playwright/tests/api/auth.spec.ts",
+      "file": "playwright/tests/api/auth.spec.js",
       "implementedScope": "Password salah dan akun tidak dikenal dibandingkan status serta pesan API.",
       "remainingScope": "Timing side channel, normalisasi seluruh response, serta role lain sesuai kebutuhan security review.",
       "coverage": "starter-subscope",
@@ -49,7 +55,7 @@
     {
       "testId": "TS-046",
       "engine": "playwright",
-      "file": "playwright/tests/mobile/critical-flow.spec.ts",
+      "file": "playwright/tests/mobile/critical-flow.spec.js",
       "implementedScope": "Login-dashboard-logout 320 px; tombol logout dalam viewport dan halaman tanpa overflow.",
       "remainingScope": "Alur kritis lain, menu/modal/tabel, keyboard mobile, dan perangkat nyata.",
       "coverage": "starter-subscope",
@@ -58,11 +64,17 @@
     {
       "testId": "TS-071",
       "engine": "playwright",
-      "file": "playwright/tests/responsive/login-layout.spec.ts",
+      "file": "playwright/tests/responsive/login-layout.spec.js",
       "implementedScope": "Form login pada 320, 768, 1280 px.",
       "remainingScope": "Seluruh halaman serta batas breakpoint Tailwind aktual.",
       "coverage": "starter-subscope",
-      "stagingVerification": "Not Run"
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-13T04-28-07-470Z-7f1141d7",
+        "scope": "implementedScope only; manual snapshot unchanged"
+      }
     }
   ]
 }

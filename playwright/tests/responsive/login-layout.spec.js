@@ -1,5 +1,4 @@
-import { test, expect } from '../../fixtures/ems';
-
+import { test, expect } from '../../fixtures/ems.js';
 for (const width of [320, 768, 1280]) {
   test(`[TS-071] [CROSS-RESP] Login dapat digunakan tanpa overflow pada ${width} px`, async ({ page, settings }) => {
     await page.setViewportSize({ width, height: 800 });

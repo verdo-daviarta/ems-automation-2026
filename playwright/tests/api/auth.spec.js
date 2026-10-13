@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { test, expect } from '../../fixtures/ems';
-
+import { test, expect } from '../../fixtures/ems.js';
 test('[TS-003] [CROSS-SEC] API: credential salah dan akun tidak dikenal memberi pesan umum yang sama', async ({ request, settings }) => {
   const api = settings.contract.api;
   test.skip(!api.enabled, 'Kontrak API belum dikonfigurasi; ini Not Run, bukan Pass.');

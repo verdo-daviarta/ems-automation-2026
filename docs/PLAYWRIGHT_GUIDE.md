@@ -29,14 +29,14 @@ Keduanya tidak menggantikan kebutuhan sinkronisasi business flow yang tepat.
 ## Fixture berbeda dengan file data Cypress
 
 Folder `cypress/fixtures/` digunakan untuk data uji. Fixture Playwright adalah penyedia
-environment/objek yang dibutuhkan setiap test. Contoh `playwright/fixtures/ems.ts`:
+environment/objek yang dibutuhkan setiap test. Contoh `playwright/fixtures/ems.js`:
 
 - `page`: tab browser dalam context baru untuk setiap test UI.
 - `request`: client HTTP untuk test API.
 - `settings`: konfigurasi target EMS.
 - `auth`: instance `AuthPage` untuk login/logout melalui UI.
 
-Import `test` dan `expect` dari fixture project (`../../fixtures/ems` untuk spec yang
+Import `test` dan `expect` dari fixture project (`../../fixtures/ems.js` untuk spec yang
 saat ini berada di `tests/api`, `tests/mobile`, dan `tests/responsive`) agar `settings`
 dan `auth` tersedia. Fixture disiapkan sesuai kebutuhan test; API spec yang hanya
 memakai `request` dan `settings` tidak perlu meluncurkan browser.
@@ -44,14 +44,14 @@ memakai `request` dan `settings` tidak perlu meluncurkan browser.
 
 ## Cara membaca spec yang sudah tersedia
 
-Buka `playwright/tests/mobile/critical-flow.spec.ts`. Alurnya:
+Buka `playwright/tests/mobile/critical-flow.spec.js`. Alurnya:
 
 1. Fixture memberikan `page`, `auth`, dan `settings`.
 2. `await auth.login(settings.roles[0])` login memakai role pertama yang dikonfigurasi.
 3. Assertion memastikan tombol logout dalam viewport dan tidak ada horizontal overflow.
 4. `await auth.logout()` mengakhiri session.
 
-Selector/interaksi auth berada di `playwright/pages/auth.page.ts`. Ini serupa Page
+Selector/interaksi auth berada di `playwright/pages/auth.page.js`. Ini serupa Page
 Object Cypress, tetapi memakai API Playwright. Pada API spec, HTTP status diperiksa
 bersama tipe, isi, dan kesamaan pesan error; tidak hanya status code.
 
@@ -80,7 +80,7 @@ npm run pw:run -- --project=responsive
 npm run pw:run
 ```
 
-`project` berarti kelompok test dengan konfigurasi tertentu di `playwright.config.ts`.
+`project` berarti kelompok test dengan konfigurasi tertentu di `playwright.config.js`.
 `api` adalah test HTTP; `mobile-320` memakai emulasi Chromium 320×720 dengan touch;
 `responsive` menguji layout pada tiga ukuran. Emulasi ini belum membuktikan hasil
 pada perangkat Android/iOS nyata. API dan mobile saat ini menggunakan role pertama,
