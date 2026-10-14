@@ -10,7 +10,9 @@
   "scripts": {
     "setup": "node scripts/setup.mjs",
     "doctor": "node scripts/doctor.mjs",
-    "check": "npm run syntaxcheck && npm run test:unit && npm run coverage:catalog",
+    "check": "npm run format:check && npm run syntaxcheck && npm run test:unit && npm run coverage:catalog",
+    "format": "prettier --write \"**/*.{js,cjs,mjs,json}\"",
+    "format:check": "prettier --check \"**/*.{js,cjs,mjs,json}\"",
     "syntaxcheck": "node scripts/syntax.mjs",
     "test:unit": "node --test checks/settings.test.cjs checks/demo.test.mjs checks/reporting.test.mjs",
     "test": "npm run test:demo",
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@playwright/test": "1.64.0",
     "cypress": "16.1.1",
-    "dotenv": "17.2.3"
+    "dotenv": "17.2.3",
+    "prettier": "3.9.10"
   }
 }

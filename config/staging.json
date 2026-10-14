@@ -20,5 +20,10 @@
   },
   "dependencies": {
     "login": "Cloudflare Turnstile must issue a valid token before Sign In is enabled. No CAPTCHA bypass or mock is configured."
+  },
+  "rateLimit": {
+    "role": "komandan",
+    "requestPath": "/login",
+    "attemptsBeforeLockCheck": 21
   }
 }

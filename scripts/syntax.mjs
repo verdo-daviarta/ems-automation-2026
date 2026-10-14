@@ -4,18 +4,22 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const isJavaScript = file => /\.(?:js|cjs|mjs)$/.test(file);
+const isJavaScript = (file) => /\.(?:js|cjs|mjs)$/.test(file);
 function sourceFiles(directory) {
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const file = path.join(directory, entry.name);
     return entry.isDirectory() ? sourceFiles(file) : isJavaScript(file) ? [file] : [];
   });
 }
 
 const files = [
-  ...fs.readdirSync(root).filter(isJavaScript).map(file => path.join(root, file)),
-  ...['checks', 'cypress', 'demo', 'playwright', 'scripts', 'shared']
-    .flatMap(directory => sourceFiles(path.join(root, directory)))
+  ...fs
+    .readdirSync(root)
+    .filter(isJavaScript)
+    .map((file) => path.join(root, file)),
+  ...['checks', 'cypress', 'demo', 'playwright', 'scripts', 'shared'].flatMap((directory) =>
+    sourceFiles(path.join(root, directory))
+  )
 ].sort();
 let failed = 0;
 for (const file of files) {

@@ -29,11 +29,20 @@ export default defineConfig({
   },
   projects: [
     { name: 'api', testMatch: '**/api/**/*.spec.js' },
-    { name: 'mobile-320', testMatch: '**/mobile/**/*.spec.js',
-      use: { viewport: { width: 320, height: 720 }, isMobile: true, hasTouch: true } },
+    {
+      name: 'mobile-320',
+      testMatch: '**/mobile/**/*.spec.js',
+      use: { viewport: { width: 320, height: 720 }, isMobile: true, hasTouch: true }
+    },
     { name: 'responsive', testMatch: '**/responsive/**/*.spec.js' }
   ],
-  webServer: settings.target === 'demo' && process.env.QA_DEMO_MANAGED !== '1'
-    ? { command: 'node demo/server.mjs', url: `${settings.baseURL}/health`, reuseExistingServer: false, timeout: 15000 }
-    : undefined
+  webServer:
+    settings.target === 'demo' && process.env.QA_DEMO_MANAGED !== '1'
+      ? {
+          command: 'node demo/server.mjs',
+          url: `${settings.baseURL}/health`,
+          reuseExistingServer: false,
+          timeout: 15000
+        }
+      : undefined
 });

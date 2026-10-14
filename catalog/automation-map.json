@@ -4,7 +4,7 @@
     {
       "testId": "TS-001",
       "engine": "cypress",
-      "file": "cypress/e2e/auth/login.cy.js",
+      "file": "cypress/e2e/FEAT-001-login/login.cy.js",
       "implementedScope": "Login valid via UI untuk role terkonfigurasi; assertion route dan dashboard ready.",
       "remainingScope": "API login valid; konfirmasi seluruh role dan persyaratan rinci AC di staging.",
       "coverage": "starter-subscope",
@@ -13,16 +13,33 @@
     {
       "testId": "TS-002",
       "engine": "cypress",
-      "file": "cypress/e2e/auth/login.cy.js",
+      "file": "cypress/e2e/FEAT-001-login/login.cy.js",
       "implementedScope": "Penolakan field kosong melalui UI.",
       "remainingScope": "Format invalid, kombinasi field, serta validasi API sesuai kontrak.",
       "coverage": "starter-subscope",
       "stagingVerification": "Not Run"
     },
     {
+      "testId": "TS-004",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-004-login-limit/login-limit.cy.js",
+      "implementedScope": "21 percobaan login UI dengan password salah pada akun komandan di staging, lalu assertion toast penguncian dan format tanggal/jam; hanya berjalan dengan opt-in QA_RUN_RATE_LIMIT=1.",
+      "remainingScope": "Titik blokir persis pada percobaan ke-20/21, durasi dan mekanisme pemulihan, validasi API, serta role lain.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Fail",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-14T07-25-39-720Z-ffd1a77b",
+        "scope": "21 percobaan UI role komandan; toast bertanggal yang diharapkan tidak ditemukan; manual snapshot unchanged",
+        "observedToast": "Terlalu banyak percobaan login, coba lagi nanti",
+        "diagnosticRunId": "2026-10-14T07-28-33-324Z-f2699f51"
+      }
+    },
+    {
       "testId": "TS-006",
       "engine": "cypress",
-      "file": "cypress/e2e/auth/logout.cy.js",
+      "file": "cypress/e2e/FEAT-012-logout/logout.cy.js",
       "implementedScope": "Logout UI dan akses ulang route dashboard tanpa session.",
       "remainingScope": "Invalidasi token/server dan seluruh route/session lain sesuai AC.",
       "coverage": "starter-subscope",
@@ -31,7 +48,7 @@
     {
       "testId": "TS-072",
       "engine": "cypress",
-      "file": "cypress/e2e/auth/password-visibility.cy.js",
+      "file": "cypress/e2e/FEAT-002-password/password-visibility.cy.js",
       "implementedScope": "Toggle password type dan nilai terjaga.",
       "remainingScope": "Verifikasi selector dan AC pada aplikasi EMS staging.",
       "coverage": "starter-subscope",

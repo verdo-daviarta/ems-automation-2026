@@ -1,0 +1,6 @@
+node_modules/
+reports/
+test-results/
+playwright/.auth/
+catalog/test-scenarios.json
+package-lock.json

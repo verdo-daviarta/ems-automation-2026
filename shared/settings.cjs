@@ -3,6 +3,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const dotenv = require('dotenv');
 const root = path.resolve(__dirname, '..');
+const allowedRoles = ['admin', 'pj', 'komandan', 'user'];
 
 function loadEnvironment() {
   dotenv.config({ path: path.join(root, '.env'), quiet: true });
@@ -15,14 +16,20 @@ function requireValue(env, key) {
 
 function loginIdentity(env, role) {
   const prefix = `QA_${role.toUpperCase()}`;
-  const key = [`${prefix}_ID`, `${prefix}_USERNAME`, `${prefix}_EMAIL`].find(name => env[name]?.trim());
+  const key = [`${prefix}_ID`, `${prefix}_USERNAME`, `${prefix}_EMAIL`].find((name) =>
+    env[name]?.trim()
+  );
   if (!key) throw new Error(`${prefix}_ID belum diisi. Alias _USERNAME atau _EMAIL juga didukung.`);
   return requireValue(env, key);
 }
 
 function httpUrl(value, name) {
   let url;
-  try { url = new URL(value); } catch { throw new Error(`${name} harus berupa URL HTTP/HTTPS.`); }
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`${name} harus berupa URL HTTP/HTTPS.`);
+  }
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
     throw new Error(`${name} harus HTTP/HTTPS tanpa credential di URL.`);
   }
@@ -30,42 +37,104 @@ function httpUrl(value, name) {
   return url.href.replace(/\/$/, '');
 }
 
+function readRoles(env, target) {
+  const roles =
+    target === 'demo'
+      ? ['admin', 'pj', 'user']
+      : (env.QA_ROLES || 'admin').split(',').map((role) => role.trim());
+
+  if (
+    !roles.length ||
+    roles.some((role) => !allowedRoles.includes(role)) ||
+    new Set(roles).size !== roles.length
+  ) {
+    throw new Error('QA_ROLES harus daftar unik admin,pj,komandan,user.');
+  }
+
+  return roles;
+}
+
+function readCredentials(env, target, roles) {
+  return Object.fromEntries(
+    roles.map((role) => {
+      const account =
+        target === 'demo'
+          ? { email: `${role}@ems-demo.test`, password: 'DemoOnly!12345' }
+          : {
+              // Properti email adalah nama internal lama; nilainya dapat berupa username/ID.
+              email: loginIdentity(env, role),
+              password: requireValue(env, `QA_${role.toUpperCase()}_PASSWORD`)
+            };
+
+      return [role, account];
+    })
+  );
+}
+
+function validateContract(contract) {
+  if (!contract.reviewed) {
+    throw new Error(
+      'Kontrak config/staging.json belum direview. Isi route/selector nyata lalu set reviewed=true.'
+    );
+  }
+
+  for (const [name, value] of Object.entries(contract.routes)) {
+    if (
+      typeof value !== 'string' ||
+      !value.startsWith('/') ||
+      value.startsWith('//') ||
+      /[?#]/.test(value)
+    ) {
+      throw new Error(`Route ${name} harus path lokal tanpa query/hash.`);
+    }
+  }
+
+  for (const [name, value] of Object.entries(contract.selectors)) {
+    if (!value?.trim()) throw new Error(`Selector ${name} belum diisi.`);
+  }
+
+  if (!contract.api.enabled) return;
+
+  for (const name of ['loginPath', 'emailField', 'passwordField', 'messageField']) {
+    if (!contract.api[name]?.trim()) throw new Error(`Kontrak API ${name} belum diisi.`);
+  }
+  if (!contract.api.loginPath.startsWith('/') || contract.api.loginPath.startsWith('//')) {
+    throw new Error('API loginPath harus path lokal.');
+  }
+  if (![400, 401, 403, 422].includes(contract.api.invalidAuthStatus)) {
+    throw new Error('Konfirmasi invalidAuthStatus pada kontrak API.');
+  }
+}
+
 function readSettings(env = process.env) {
   const target = env.QA_TARGET || 'demo';
   if (!['demo', 'staging'].includes(target)) throw new Error('QA_TARGET harus demo atau staging.');
   const contract = JSON.parse(fs.readFileSync(path.join(root, 'config', `${target}.json`), 'utf8'));
   const demoUrl = env.QA_DEMO_URL || 'http://127.0.0.1:4173';
-  const baseURL = httpUrl(target === 'demo' ? demoUrl : requireValue(env, 'QA_BASE_URL'), 'QA_BASE_URL');
-  const apiBaseURL = httpUrl(target === 'demo' ? demoUrl : (env.QA_API_BASE_URL || baseURL), 'QA_API_BASE_URL');
-  const roles = target === 'demo' ? ['admin', 'pj', 'user'] : (env.QA_ROLES || 'admin').split(',').map(s => s.trim());
-  if (!roles.length || roles.some(r => !['admin', 'pj', 'komandan', 'user'].includes(r)) || new Set(roles).size !== roles.length) {
-    throw new Error('QA_ROLES harus daftar unik admin,pj,komandan,user.');
-  }
-  const credentials = Object.fromEntries(roles.map(role => [role, target === 'demo'
-    ? { email: `${role}@ems-demo.test`, password: 'DemoOnly!12345' }
-    // Properti email adalah nama internal lama; nilainya dapat berupa username/ID.
-    : { email: loginIdentity(env, role), password: requireValue(env, `QA_${role.toUpperCase()}_PASSWORD`) }]));
-  if (!contract.reviewed) throw new Error('Kontrak config/staging.json belum direview. Isi route/selector nyata lalu set reviewed=true.');
-  for (const [name, value] of Object.entries(contract.routes)) {
-    if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || /[?#]/.test(value)) {
-      throw new Error(`Route ${name} harus path lokal tanpa query/hash.`);
-    }
-  }
-  for (const [name, value] of Object.entries(contract.selectors)) {
-    if (!value?.trim()) throw new Error(`Selector ${name} belum diisi.`);
-  }
-  if (contract.api.enabled) {
-    for (const name of ['loginPath', 'emailField', 'passwordField', 'messageField']) {
-      if (!contract.api[name]?.trim()) throw new Error(`Kontrak API ${name} belum diisi.`);
-    }
-    if (!contract.api.loginPath.startsWith('/') || contract.api.loginPath.startsWith('//')) {
-      throw new Error('API loginPath harus path lokal.');
-    }
-    if (![400, 401, 403, 422].includes(contract.api.invalidAuthStatus)) throw new Error('Konfirmasi invalidAuthStatus pada kontrak API.');
-  }
-  const runId = env.QA_RUN_ID || `${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomUUID().slice(0, 8)}`;
-  return { target, baseURL, apiBaseURL, contract, roles, credentials, runId,
-    buildId: target === 'demo' ? 'framework-demo-v1' : requireValue(env, 'QA_BUILD_ID') };
+  const baseURL = httpUrl(
+    target === 'demo' ? demoUrl : requireValue(env, 'QA_BASE_URL'),
+    'QA_BASE_URL'
+  );
+  const apiBaseURL = httpUrl(
+    target === 'demo' ? demoUrl : env.QA_API_BASE_URL || baseURL,
+    'QA_API_BASE_URL'
+  );
+  const roles = readRoles(env, target);
+  const credentials = readCredentials(env, target, roles);
+  validateContract(contract);
+  const runId =
+    env.QA_RUN_ID ||
+    `${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomUUID().slice(0, 8)}`;
+  return {
+    target,
+    baseURL,
+    apiBaseURL,
+    contract,
+    roles,
+    credentials,
+    runId,
+    buildId: target === 'demo' ? 'framework-demo-v1' : requireValue(env, 'QA_BUILD_ID')
+  };
 }
 
 function publicSettings(settings) {

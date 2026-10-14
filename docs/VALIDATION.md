@@ -1,5 +1,59 @@
 # Validasi EMS QA Automation
 
+## FEAT-004 / TS-004 Pending di Cypress Open — 14 Oktober 2026
+
+Status Pending pada runner interaktif berasal dari `it.skip` saat
+`QA_RUN_RATE_LIMIT` tidak disetel di proses yang membuka Cypress. Spec kini
+mengaktifkan TS-004 saat `Cypress.config('isInteractive')` bernilai true;
+run headless tetap memerlukan `QA_RUN_RATE_LIMIT=1` agar tidak mengunci akun
+secara tidak sengaja.
+
+`npm run check` lulus (29 file JavaScript, 16 unit test, mapping 8 Test ID).
+Target demo `framework-demo-v1`, run `2026-10-14T07-57-11-386Z-cf8336b2`:
+TS-004 Cypress headless dengan flag **Pass 1/1, Pending 0**. Regresi demo
+`2026-10-14T08-00-49-389Z-ed87036c`: Cypress **8 Pass, TS-004 Pending 1**
+tanpa flag, Playwright **5 Pass**. Jendela Cypress Open yang dipakai pengguna
+tidak terhubung ke alat inspeksi browser pada sesi ini, sehingga perilaku
+interaktif setelah perubahan belum dapat dikonfirmasi langsung. Staging tidak
+diulang karena akun `komandan` dapat masih terkunci; temuan toast staging di
+bawah tetap terbuka.
+
+## FEAT-004 / TS-004 toast bertanggal — 14 Oktober 2026
+
+Target staging `http://ems.10.70.0.45.nip.io/`, build `v1.0.5-staging`, role
+`komandan`, run `2026-10-14T07-25-39-720Z-ffd1a77b`: **Fail 1/1**. Test
+melakukan 21 submit password salah dan tidak menemukan toast dengan expected
+result `Akun terkunci. Silakan coba lagi dd mmm yyyy, hhmm`. Satu percobaan
+diagnostik setelah akun terkunci, run `2026-10-14T07-28-33-324Z-f2699f51`,
+menampilkan toast `Terlalu banyak percobaan login, coba lagi nanti`.
+Pesan saat transisi tepat pada percobaan ke-21 belum tertangkap secara terpisah.
+
+Assertion akhir kini menyimpan teks toast terakhir pada pesan kegagalan untuk
+memudahkan diagnosis. Versi akhir spec lulus pada demo lokal, run
+`2026-10-14T07-33-28-787Z-a60053fc` (**Pass 1/1**), dan `npm run check` lulus
+(29 file JavaScript, 16 unit test). Staging belum diulang dengan versi akhir
+karena akun `komandan` sedang terkunci. Hasil Pass sebelumnya di bawah memakai
+assertion kata `akun terkunci` yang lebih longgar dan tidak membuktikan format
+tanggal/jam yang sekarang diminta.
+
+## FEAT-004 / TS-004 Cypress staging — 14 Oktober 2026
+
+Target `http://ems.10.70.0.45.nip.io/`, build `v1.0.5-staging`, role
+`komandan`, run `2026-10-14T06-44-12-133Z-a2300fe8`: **Pass 1/1**.
+Spec Cypress mengirim 21 percobaan login UI dengan password salah, menunggu
+request server action `/login` pada setiap percobaan, lalu memverifikasi pesan
+akun terkunci terlihat. Credential asli tidak dikirim oleh spec ini. Akun
+`komandan` dapat tetap terkunci setelah run; proses dan durasi pemulihan belum diuji.
+Status manual pada snapshot tidak diubah. Hasil ini hanya membuktikan subcakupan
+yang tercatat di `catalog/automation-map.json` pada build tersebut.
+
+Demo terpisah `framework-demo-v1`, run
+`2026-10-14T06-43-38-847Z-c4e06872`: Cypress TS-004 **Pass 1/1** dengan akun
+fiktif. `npm run check` lulus (29 file JavaScript, 16 unit check, mapping 8 Test ID).
+Regresi Cypress demo standar pada run `2026-10-14T06-46-10-890Z-b823b47e`
+memberi 8 Pass dan TS-004 Pending tanpa flag opt-in. Playwright tidak dijalankan
+untuk pekerjaan TS-004.
+
 ## Cypress Open staging: reload berulang — 13 Oktober 2026
 
 Saat `login.cy.js` dipilih dalam Chrome interaktif, runner berpindah berulang dari

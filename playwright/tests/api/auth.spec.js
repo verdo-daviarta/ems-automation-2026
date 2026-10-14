@@ -1,13 +1,23 @@
 import { randomUUID } from 'node:crypto';
 import { test, expect } from '../../fixtures/ems.js';
-test('[TS-003] [CROSS-SEC] API: credential salah dan akun tidak dikenal memberi pesan umum yang sama', async ({ request, settings }) => {
+test('[TS-003] [CROSS-SEC] API: credential salah dan akun tidak dikenal memberi pesan umum yang sama', async ({
+  request,
+  settings
+}) => {
   const api = settings.contract.api;
   test.skip(!api.enabled, 'Kontrak API belum dikonfigurasi; ini Not Run, bukan Pass.');
   const email = settings.credentials[settings.roles[0]].email;
   const invalidPassword = `Invalid!${randomUUID()}`;
   const url = `${settings.apiBaseURL}${api.loginPath}`;
-  const known = await request.post(url, { data: { [api.emailField]: email, [api.passwordField]: invalidPassword } });
-  const unknown = await request.post(url, { data: { [api.emailField]: `missing-${randomUUID()}@example.invalid`, [api.passwordField]: invalidPassword } });
+  const known = await request.post(url, {
+    data: { [api.emailField]: email, [api.passwordField]: invalidPassword }
+  });
+  const unknown = await request.post(url, {
+    data: {
+      [api.emailField]: `missing-${randomUUID()}@example.invalid`,
+      [api.passwordField]: invalidPassword
+    }
+  });
   expect(known.status()).toBe(api.invalidAuthStatus);
   expect(unknown.status()).toBe(api.invalidAuthStatus);
   const knownBody = await known.json();

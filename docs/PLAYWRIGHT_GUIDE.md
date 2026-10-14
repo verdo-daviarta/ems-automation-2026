@@ -34,7 +34,7 @@ environment/objek yang dibutuhkan setiap test. Contoh `playwright/fixtures/ems.j
 - `page`: tab browser dalam context baru untuk setiap test UI.
 - `request`: client HTTP untuk test API.
 - `settings`: konfigurasi target EMS.
-- `auth`: instance `AuthPage` untuk login/logout melalui UI.
+- `auth`: helper fixture yang menyusun `LoginPage` dan `DashboardPage` untuk login/logout melalui UI.
 
 Import `test` dan `expect` dari fixture project (`../../fixtures/ems.js` untuk spec yang
 saat ini berada di `tests/api`, `tests/mobile`, dan `tests/responsive`) agar `settings`
@@ -51,8 +51,10 @@ Buka `playwright/tests/mobile/critical-flow.spec.js`. Alurnya:
 3. Assertion memastikan tombol logout dalam viewport dan tidak ada horizontal overflow.
 4. `await auth.logout()` mengakhiri session.
 
-Selector/interaksi auth berada di `playwright/pages/auth.page.js`. Ini serupa Page
-Object Cypress, tetapi memakai API Playwright. Pada API spec, HTTP status diperiksa
+Selector dan interaksi form berada di `playwright/pages/auth/LoginPage.js`, sedangkan
+kesiapan dashboard dan logout di `playwright/pages/dashboard/DashboardPage.js`.
+Fixture `playwright/fixtures/ems.js` menyusun keduanya tanpa mengubah cara spec memanggil
+`auth.login()` dan `auth.logout()`. Pada API spec, HTTP status diperiksa
 bersama tipe, isi, dan kesamaan pesan error; tidak hanya status code.
 
 ## Jalankan bertahap dari terminal root project

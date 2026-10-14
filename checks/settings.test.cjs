@@ -19,16 +19,28 @@ function mockStagingContract(t, overrides = {}) {
   });
 }
 
-test('staging tidak menerima kontrak selector yang belum direview', t => {
+test('staging tidak menerima kontrak selector yang belum direview', (t) => {
   mockStagingContract(t, { reviewed: false });
-  assert.throws(() => readSettings({ QA_TARGET: 'staging', QA_BASE_URL: 'https://staging.example.test',
-    QA_ADMIN_EMAIL: 'admin@example.test', QA_ADMIN_PASSWORD: 'test-only' }), /belum direview/);
+  assert.throws(
+    () =>
+      readSettings({
+        QA_TARGET: 'staging',
+        QA_BASE_URL: 'https://staging.example.test',
+        QA_ADMIN_EMAIL: 'admin@example.test',
+        QA_ADMIN_PASSWORD: 'test-only'
+      }),
+    /belum direview/
+  );
 });
 
-test('staging mendukung ID login admin, pj, komandan tanpa membawa credential ke metadata', t => {
+test('staging mendukung ID login admin, pj, komandan tanpa membawa credential ke metadata', (t) => {
   mockStagingContract(t);
-  const env = { QA_TARGET: 'staging', QA_BASE_URL: 'https://staging.example.test',
-    QA_BUILD_ID: 'test-release', QA_ROLES: 'admin,pj,komandan' };
+  const env = {
+    QA_TARGET: 'staging',
+    QA_BASE_URL: 'https://staging.example.test',
+    QA_BUILD_ID: 'test-release',
+    QA_ROLES: 'admin,pj,komandan'
+  };
   for (const role of ['admin', 'pj', 'komandan']) {
     env[`QA_${role.toUpperCase()}_ID`] = `${role}-test-id`;
     env[`QA_${role.toUpperCase()}_PASSWORD`] = 'test-only-password';
@@ -42,11 +54,17 @@ test('staging mendukung ID login admin, pj, komandan tanpa membawa credential ke
   assert.equal(metadata.includes('komandan-test-id'), false);
 });
 
-test('ID login diprioritaskan dan alias username/email tetap kompatibel', t => {
+test('ID login diprioritaskan dan alias username/email tetap kompatibel', (t) => {
   mockStagingContract(t);
-  const env = { QA_TARGET: 'staging', QA_BASE_URL: 'https://staging.example.test',
-    QA_BUILD_ID: 'test-release', QA_ADMIN_PASSWORD: 'test-only-password',
-    QA_ADMIN_ID: 'preferred-id', QA_ADMIN_USERNAME: 'username-alias', QA_ADMIN_EMAIL: 'email-alias' };
+  const env = {
+    QA_TARGET: 'staging',
+    QA_BASE_URL: 'https://staging.example.test',
+    QA_BUILD_ID: 'test-release',
+    QA_ADMIN_PASSWORD: 'test-only-password',
+    QA_ADMIN_ID: 'preferred-id',
+    QA_ADMIN_USERNAME: 'username-alias',
+    QA_ADMIN_EMAIL: 'email-alias'
+  };
   assert.equal(readSettings(env).credentials.admin.email, 'preferred-id');
   delete env.QA_ADMIN_ID;
   assert.equal(readSettings(env).credentials.admin.email, 'username-alias');
@@ -54,10 +72,14 @@ test('ID login diprioritaskan dan alias username/email tetap kompatibel', t => {
   assert.equal(readSettings(env).credentials.admin.email, 'email-alias');
 });
 
-test('role tak dikenal dan ID login kosong ditolak sebelum runner berjalan', t => {
+test('role tak dikenal dan ID login kosong ditolak sebelum runner berjalan', (t) => {
   mockStagingContract(t);
-  const env = { QA_TARGET: 'staging', QA_BASE_URL: 'https://staging.example.test',
-    QA_BUILD_ID: 'test-release', QA_ADMIN_PASSWORD: 'test-only-password' };
+  const env = {
+    QA_TARGET: 'staging',
+    QA_BASE_URL: 'https://staging.example.test',
+    QA_BUILD_ID: 'test-release',
+    QA_ADMIN_PASSWORD: 'test-only-password'
+  };
   assert.throws(() => readSettings({ ...env, QA_ROLES: 'unknown' }), /QA_ROLES/);
   assert.throws(() => readSettings(env), /QA_ADMIN_ID/);
 });
@@ -75,7 +97,13 @@ test('pemetaan reporter mempertahankan Test ID, tidak menghasilkan ID palsu', ()
   assert.equal(testId('Framework internal setup'), null);
 });
 test('browser tidak tersedia dilaporkan Blocked, assertion produk tetap Fail', () => {
-  assert.equal(playwrightStatus('failed', "Error: browserType.launch: Executable doesn't exist at /tmp/browser"), 'Blocked');
+  assert.equal(
+    playwrightStatus(
+      'failed',
+      "Error: browserType.launch: Executable doesn't exist at /tmp/browser"
+    ),
+    'Blocked'
+  );
   assert.equal(playwrightStatus('failed', 'expect(locator).toBeVisible: Timeout'), 'Fail');
   assert.equal(playwrightStatus('skipped'), 'Not Run');
 });

@@ -17,5 +17,10 @@
     "passwordField": "password",
     "messageField": "message",
     "invalidAuthStatus": 401
+  },
+  "rateLimit": {
+    "role": "limit",
+    "requestPath": "/api/login",
+    "attemptsBeforeLockCheck": 21
   }
 }

@@ -2,7 +2,7 @@
 
 Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
-Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **7 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
+Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **8 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
 
 ## Mulai di VS Code lokal
 
@@ -26,10 +26,10 @@ Demo memakai server lokal yang disertakan dalam proyek, akun fiktif, dan port se
 
 | Runner | Implementasi awal | Alasan |
 | --- | --- | --- |
-| Cypress | TS-001 login UI, TS-002 field kosong, TS-006 logout, TS-072 password visibility | Baseline smoke sebelum memperluas regression UI |
+| Cypress | TS-001 login UI, TS-002 field kosong, TS-004 pembatasan login (opt-in), TS-006 logout, TS-072 password visibility | Baseline smoke dan skenario pembatasan yang dijalankan terpisah |
 | Playwright | TS-003 perbandingan error API, TS-046 alur 320 px, TS-071 login pada 320/768/1280 px | Melengkapi cakupan API dan mobile tanpa menduplikasi seluruh suite UI |
 
-Pada demo, Cypress menjalankan 8 test instance (login/logout untuk tiga role, validasi kosong, dan toggle password). Playwright menjalankan 5 instance (1 API, 1 mobile, 3 viewport). Jumlah instance berbeda dari jumlah Test ID.
+Pada demo standar, Cypress menjalankan 8 test instance (login/logout untuk tiga role, validasi kosong, dan toggle password); TS-004 dilewati kecuali diaktifkan secara eksplisit. Playwright memiliki 5 instance (1 API, 1 mobile, 3 viewport). Jumlah instance berbeda dari jumlah Test ID.
 
 Mulai pengembangan UI sehari-hari dari Cypress. Bila belum familiar dengan Playwright, baca [Panduan Playwright untuk pengguna Cypress](docs/PLAYWRIGHT_GUIDE.md), lalu jalankan project `api` sebelum mencoba mobile/responsive.
 
@@ -73,7 +73,7 @@ Jika frontend dan API satu base URL, `QA_API_BASE_URL` boleh kosong. API test te
 | `selectors.dashboardReady` | Heading setelah navigasi dashboard tersedia; tidak cocok dengan heading hero login |
 | `selectors.logout` | Tombol logout yang dapat diklik pada keadaan halaman tersebut |
 
-Selector berupa CSS; utamakan `data-testid` yang disepakati. Jika logout berada di dropdown/menu atau login memakai SSO, ubah adapter `cypress/pages/auth/LoginPage.js`, orchestration auth di `cypress/support/commands.js`, dan `playwright/pages/auth.page.js` agar mengikuti alur sesungguhnya. Jangan mengubah aplikasi atau AC untuk mengikuti demo.
+Selector berupa CSS; utamakan `data-testid` yang disepakati. Jika logout berada di dropdown/menu atau login memakai SSO, ubah Page Object terkait di `cypress/pages/` dan `playwright/pages/`, lalu sesuaikan orchestration di `cypress/support/commands.js` dan `playwright/fixtures/ems.js`. Jangan mengubah aplikasi atau AC untuk mengikuti demo.
 
 Untuk API TS-003, aktifkan `api.enabled=true` setelah kontraknya jelas. Isi login path, nama field email/password, nama field pesan error JSON pada tingkat teratas, dan HTTP status penolakan yang disepakati. Nilai `401` pada template adalah contoh yang harus direview. Jika API disabled, TS-003 dilaporkan **Not Run**, bukan Pass. Request TS-003 hanya dua percobaan login invalid per run; ini bukan uji login limiter atau brute force.
 
@@ -82,7 +82,7 @@ Untuk API TS-003, aktifkan `api.enabled=true` setelah kontraknya jelas. Isi logi
 
 ```powershell
 npm run doctor
-npm run cy:run -- --spec cypress/e2e/auth/password-visibility.cy.js
+npm run cy:run -- --spec cypress/e2e/FEAT-002-password/password-visibility.cy.js
 npm run pw:run -- --project=responsive
 ```
 
@@ -95,6 +95,29 @@ npm run pw:run
 npm run test:staging
 ```
 
+TS-004 adalah skenario yang dapat **mengunci akun `komandan`**. Jalankan hanya saat memang menguji pembatasan login, dengan `QA_RUN_RATE_LIMIT=1` dan spec tunggal:
+
+```powershell
+$env:QA_RUN_RATE_LIMIT='1'
+try {
+  npm run cy:run -- --spec cypress/e2e/FEAT-004-login-limit/login-limit.cy.js
+} finally {
+  Remove-Item Env:QA_RUN_RATE_LIMIT
+}
+```
+
+Untuk menjalankannya dari **jendela Cypress**, tutup runner Cypress yang sudah terbuka, lalu jalankan dari PowerShell:
+
+```powershell
+npm.cmd run cy:open
+```
+
+Pilih **E2E Testing → Chrome → `FEAT-004-login-limit/login-limit.cy.js`**. Memilih spec di jendela interaktif mengaktifkan TS-004 tanpa flag; eksekusi headless tetap memerlukan `QA_RUN_RATE_LIMIT=1`. Tutup runner lama agar perubahan konfigurasi termuat. Setelah 21 percobaan, akun `komandan` harus pulih sebelum tombol rerun menghasilkan pengujian batas login yang valid.
+
+Dalam run headless tanpa flag tersebut, TS-004 dilaporkan Not Run. Test mengirim 21 password salah melalui form UI akun `komandan`, menunggu setiap request login selesai, lalu memeriksa toast `Akun terkunci. Silakan coba lagi dd mmm yyyy, hhmm` dengan tanggal/jam dinamis. Akun `komandan` diambil dari `.env`; password aslinya tidak dikirim oleh spec ini. Kontrak request `/login` diambil dari inspeksi frontend staging. Durasi dan proses buka kunci belum diassert karena AC Final belum merincinya; pastikan akun sudah dipulihkan sebelum suite login lain dijalankan. Pada demo, spec memakai akun fiktif terpisah.
+
+Pada build staging `v1.0.5-staging`, assertion toast bertanggal terbaru masih **Fail**; lihat `docs/VALIDATION.md` untuk hasil dan pesan aktual.
+
 `test:staging` selalu memilih staging, meskipun `.env` masih menyebut demo. Bila konfigurasi tidak lengkap, perintah gagal dengan pesan yang jelas; tidak fallback ke demo. `cy:open`, `cy:run`, `pw:run`, dan `pw:ui` mengikuti `QA_TARGET` pada `.env`.
 
 Untuk Cypress UI di Windows, gunakan `npm run cy:open`. Script ini membersihkan `ELECTRON_RUN_AS_NODE` dari proses Cypress. Jika menjalankan `npx cypress open` langsung dari PowerShell dan variabel itu bernilai `1`, hapus dari terminal tersebut terlebih dahulu dengan `Remove-Item Env:ELECTRON_RUN_AS_NODE`. Konfigurasi Cypress juga memasukkan host staging HTTP ke allowlist Chrome agar runner tidak terus dialihkan ke HTTPS dan memuat ulang.
@@ -103,7 +126,8 @@ Untuk Cypress UI di Windows, gunakan `npm run cy:open`. Script ini membersihkan 
 
 | Perintah | Fungsi |
 | --- | --- |
-| `npm run check` | Sintaks JavaScript, guard konfigurasi, reporter, dan pemetaan catalog |
+| `npm run format` | Merapikan source dan konfigurasi sesuai panduan di `docs/CODE_STYLE.md` |
+| `npm run check` | Format, sintaks JavaScript, guard konfigurasi, reporter, dan pemetaan catalog |
 | `npm run test:demo` | Kedua runner pada aplikasi demo lokal |
 | `npm run cy:open` | Cypress UI interaktif |
 | `npm run cy:run` | Cypress headless pada target `.env` |
@@ -117,7 +141,7 @@ Contoh memilih proyek/spec:
 
 ```powershell
 npm run pw:run -- --project=mobile-320
-npm run cy:run -- --spec cypress/e2e/auth/login.cy.js
+npm run cy:run -- --spec cypress/e2e/FEAT-001-login/login.cy.js
 ```
 
 VS Code juga menyediakan **Terminal → Run Task** untuk check, demo, Cypress, Playwright UI, dan staging. Extension **Playwright Test for VSCode** (`ms-playwright.playwright`) direkomendasikan oleh proyek. Untuk menjalankan Playwright langsung dari extension dalam mode demo, webServer config memulai demo pada port 4173. Tidak ada jadwal atau CI yang diaktifkan.
@@ -154,12 +178,17 @@ Credential tidak ditulis ke metadata laporan. Akan tetapi screenshot/trace dapat
 ```text
 config/                 Kontrak route, selector, dan API per target
 shared/                 Konfigurasi dan format laporan bersama
-cypress/e2e/auth/        Spec login, logout, password visibility (@smoke)
-cypress/pages/auth/      Page Object dengan selector dari kontrak aplikasi
+cypress/e2e/FEAT-001-login/     Login UI: TS-001 dan TS-002 (@smoke)
+cypress/e2e/FEAT-002-password/  Password visibility: TS-072 (@smoke)
+cypress/e2e/FEAT-004-login-limit/ Login limitation: TS-004 (opt-in)
+cypress/e2e/FEAT-012-logout/    Logout: TS-006 (@smoke)
+cypress/pages/auth/      Form login dan toggle password
+cypress/pages/dashboard/ Dashboard ready dan logout
 cypress/fixtures/        Data nonrahasia yang dipakai ulang bila diperlukan
 cypress/support/         Settings publik dan custom command auth bersama
 playwright/fixtures/    Fixture terisolasi
-playwright/pages/       Adapter alur UI
+playwright/pages/auth/       Form login
+playwright/pages/dashboard/  Dashboard ready dan logout
 playwright/tests/       API, mobile, responsive
 playwright/reporters/   Laporan JSON dengan Test ID
 catalog/                Snapshot sheet dan pemetaan implementasi
@@ -172,10 +201,10 @@ AGENTS.md               Instruksi kerja untuk Codex
 
 File `.js` menggunakan ES Modules (`import/export`); helper `.cjs` dan script `.mjs` tetap digunakan.
 `jsconfig.json` hanya mengatur dukungan JavaScript di editor, tanpa compiler atau
-pemeriksaan tipe TypeScript. `npm run check` memeriksa sintaks menggunakan `node --check`,
-guard konfigurasi, HTTP demo, reporter, dan mapping catalog. Pemeriksaan sintaks
-tidak membuktikan import, tipe data, atau perilaku browser; jalankan demo untuk
-memverifikasi kedua runner setelah perubahan framework.
+pemeriksaan tipe TypeScript. `npm run check` memeriksa format dengan Prettier, sintaks
+menggunakan `node --check`, guard konfigurasi, HTTP demo, reporter, dan mapping catalog.
+Pemeriksaan sintaks tidak membuktikan import, tipe data, atau perilaku browser.
+Jalankan demo untuk memverifikasi kedua runner setelah perubahan framework.
 
 Runner Cypress melepas `ELECTRON_RUN_AS_NODE` hanya dari child process Cypress.
 Terminal yang mewarisi variabel tersebut dapat menggunakan command project tanpa
@@ -183,12 +212,12 @@ mengubah environment Windows.
 
 ### Pola pengembangan Cypress
 
-- **Spec (`e2e/<fitur>/`)** menyusun skenario, data uji, dan assertion expected result. Nama test tetap memuat TS/FEAT ID asli.
-- **Page Object (`pages/<fitur>/`)** menyediakan locator dan interaksi halaman. `LoginPage` mengambil selector dari `config/<target>.json`; tidak menyimpan credential, DOM element, atau session antar-test. Helper assertion route/readiness dipakai untuk sinkronisasi bersama.
+- **Spec (`e2e/FEAT-xxx-<fitur>/`)** menyusun skenario, data uji, dan assertion expected result. Satu file boleh memuat beberapa TS dalam satu FEAT; judul test memakai `[FEAT-xxx] [TS-xxx]` sesuai catalog. Skenario `CROSS-*` dikelompokkan terpisah menurut cakupannya.
+- **Page Object (`pages/<halaman>/`)** menyediakan locator dan interaksi sesuai halaman UI. `LoginPage` menangani form dan toggle password; `DashboardPage` menangani kesiapan dashboard dan logout. Keduanya mengambil selector dari `config/<target>.json` tanpa menyimpan credential, DOM element, atau session antar-test.
 - **Custom command (`support/commands.js`)** mengatur auth bersama melalui `cy.loginAs(role)` dan `cy.logoutEMS()`. Jangan menyalin login ke setiap Page Object.
 - **Fixture (`fixtures/`)** hanya untuk data nonrahasia yang memang digunakan ulang. Credential tetap dari environment.
 
-Contoh spec login kosong dapat dibaca di `cypress/e2e/auth/login.cy.js`: kunjungi halaman, submit, lalu assert error dan dashboard tidak tampil. Untuk fitur berikutnya, tambahkan folder spec dan Page Object ketika implementasi dimulai. Kedua runner tetap independen; Page Object Cypress tidak digunakan oleh Playwright.
+Contoh spec login kosong dapat dibaca di `cypress/e2e/FEAT-001-login/login.cy.js`: kunjungi halaman, submit, lalu assert error dan dashboard tidak tampil. Untuk fitur berikutnya, tambahkan folder FEAT dan Page Object ketika implementasi dimulai. Kedua runner tetap independen; Page Object Cypress tidak digunakan oleh Playwright.
 
 ## Melanjutkan melalui Codex di VS Code
 
@@ -200,12 +229,12 @@ Buka Codex pada folder ini. `AGENTS.md` sudah memuat aturan QA, pemetaan Test ID
 
 1. Pilih skenario P0/P1 yang sudah terverifikasi manual dengan expected result jelas.
 2. Baca AC terbaru dan snapshot skenario; siapkan data uji independen.
-3. Tambah spec dengan TS/FEAT ID yang asli. Bagi subcase bila satu skenario memuat banyak kondisi.
+3. Tambah spec dalam folder FEAT terkait dengan ID `[FEAT-xxx] [TS-xxx]` yang asli. Bagi subcase bila satu skenario memuat banyak kondisi.
 4. Perbarui `catalog/automation-map.json` dengan file, subcakupan yang diimplementasikan, serta bagian yang tersisa.
 5. Jalankan `npm run check`, demo bila adapter berubah, dan test staging yang relevan.
 6. Untuk defect, pertahankan assertion hasil benar menurut AC. Setelah fix, lakukan retest dan regression terkait.
 
-Perangkat yang masih offline/maintenance, pembuktian authorization/IDOR yang belum lengkap, dan perubahan AC tetap memerlukan tindak lanjut. Catalog bukan generator script otomatis; 116 Test ID belum diimplementasikan dalam starter ini. Snapshot tidak diperbarui secara berkala dan tidak ada penulisan balik ke Google Sheets.
+Perangkat yang masih offline/maintenance, pembuktian authorization/IDOR yang belum lengkap, dan perubahan AC tetap memerlukan tindak lanjut. Catalog bukan generator script otomatis; 115 Test ID belum diimplementasikan dalam starter ini. Snapshot tidak diperbarui secara berkala dan tidak ada penulisan balik ke Google Sheets.
 
 ## Versi dan referensi
 
