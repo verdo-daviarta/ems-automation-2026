@@ -49,15 +49,16 @@
       "testId": "TS-009",
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-006-notifications/notification-crud.cy.js",
-      "implementedScope": "Create/Update/Delete Room oleh admin dan PJ secara bergantian; penerima login setelah event lalu memeriksa daftar notifikasi dan badge; komandan tanpa akses fitur di dashboard.",
-      "remainingScope": "Run end-to-end setelah staging pulih, pembuktian push Socket.IO real-time saat penerima tetap online, dan pengujian objek CRUD lain.",
+      "implementedScope": "Admin Create/Update Room; PJ memeriksa pesan serta badge setelah setiap event. Komandan tidak memiliki fitur notifikasi di dashboard.",
+      "remainingScope": "Admin sebagai penerima menunggu akun aktor lain dengan izin CRU Room; Delete ditunda dan Room uji dipertahankan. Asal badge, push Socket.IO real-time, dan objek CRUD lain belum dibuktikan.",
       "coverage": "starter-subscope",
-      "stagingVerification": "Blocked",
+      "stagingVerification": "Pass",
       "stagingEvidence": {
         "target": "staging",
         "buildId": "v1.0.5-staging",
-        "runId": "2026-10-15T04-13-14-380Z-6b0a06d9",
-        "scope": "Admin CRUD Room berhasil; pemeriksaan notifikasi PJ dan arah sebaliknya tertahan oleh kegagalan login/halaman error staging. Status manual snapshot tidak berubah."
+        "runId": "2026-10-15T09-25-54-257Z-97d16c99",
+        "roles": "admin → pj; komandan",
+        "scope": "Subcakupan CRU Admin → PJ Pass: pesan Created dan Updated untuk Room yang sama terlihat setelah tiap event. Komandan tanpa fitur notifikasi Pass. Delete, arah Admin sebagai penerima, dan pembuktian Socket.IO real-time belum dicakup; status manual snapshot tidak berubah."
       }
     },
     {

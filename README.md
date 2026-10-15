@@ -118,17 +118,24 @@ Dalam run headless tanpa flag tersebut, TS-004 dilaporkan Not Run. Test mengirim
 
 Pada build staging `v1.0.5-staging`, assertion toast bertanggal terbaru masih **Fail**; lihat `docs/VALIDATION.md` untuk hasil dan pesan aktual.
 
-TS-009 memakai Cypress untuk memicu Create/Update/Delete pada Room uji unik,
-lalu memeriksa notifikasi setelah login sebagai role penerima. Jalankan spec
-tunggal berikut setelah staging dan login semua role kembali sehat:
+TS-009 memakai Cypress untuk memicu Create dan Update pada Room uji unik.
+Setelah setiap event, PJ login dan memeriksa notifikasi dari Admin. Komandan
+diperiksa tidak mempunyai fitur notifikasi. Admin sebagai penerima belum dapat
+diuji karena akun PJ dan Komandan tidak memiliki izin Add room; dibutuhkan
+aktor lain yang memiliki izin CRU Room.
+Delete ditunda. Room hasil run dipertahankan dengan awalan `QA-TS009-` agar bisa
+dipakai pada fase Delete; catat namanya dari log Cypress setelah menjalankan spec:
 
 ```powershell
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-006-notifications/notification-crud.cy.js
 ```
 
-Saat ini verifikasi TS-009 **Blocked** oleh halaman error dan login staging;
-lihat `docs/VALIDATION.md` untuk run serta Room uji yang masih perlu dibersihkan.
-Test belum mencakup pembaruan Socket.IO secara real-time.
+Run staging terbaru **Pass** untuk subcakupan Admin → PJ: PJ melihat pesan
+`Created` dan `Updated` untuk Room uji yang sama. Format pesan `Updated` di UI
+diawali `Room Name`, sedangkan `Created` diawali `Room`. Lihat
+`docs/VALIDATION.md` untuk bukti run dan batas cakupan. Test belum mencakup
+pembaruan Socket.IO secara real-time atau pembuktian bahwa badge baru berasal
+dari event test ini.
 
 `test:staging` selalu memilih staging, meskipun `.env` masih menyebut demo. Bila konfigurasi tidak lengkap, perintah gagal dengan pesan yang jelas; tidak fallback ke demo. `cy:open`, `cy:run`, `pw:run`, dan `pw:ui` mengikuti `QA_TARGET` pada `.env`.
 

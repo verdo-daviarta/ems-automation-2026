@@ -7,7 +7,8 @@ export class NotificationPage {
   }
 
   messageForRoom(roomName, action) {
-    return cy.contains('table tbody tr', `Room "${roomName}" has been ${action}`);
+    const subject = action === 'Updated' ? `Room Name "${roomName}"` : `Room "${roomName}"`;
+    return cy.contains('table tbody tr', subject).should('contain.text', `has been ${action}`);
   }
 
   get bell() {

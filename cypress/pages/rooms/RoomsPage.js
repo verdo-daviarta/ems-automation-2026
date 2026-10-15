@@ -38,36 +38,16 @@ export class RoomsPage {
     return this.roomRow(name).should('be.visible');
   }
 
-  update(name, description) {
+  updateLocation(name, location) {
     cy.intercept('PATCH', '**/api/rooms/*').as('roomUpdate');
     this.roomRow(name).find(`button[aria-label="Edit ${name}"]`).click();
     cy.get('[role="dialog"]').within(() => {
-      cy.get(descriptionSelector).clear().type(description);
+      cy.get(locationSelector).clear().type(location);
       cy.contains('button', 'Update room').click();
     });
 
     cy.wait('@roomUpdate').its('response.statusCode').should('eq', 200);
-    return cy.get('[role="dialog"]').should('not.exist');
-  }
-
-  remove(name) {
-    cy.intercept('DELETE', '**/api/rooms/*').as('roomDelete');
-    this.roomRow(name).find(`button[aria-label="Delete ${name}"]`).click();
-    cy.get('[role="dialog"]').contains('button', 'Yes, Delete').click();
-    cy.wait('@roomDelete').its('response.statusCode').should('be.within', 200, 299);
-    return cy.get('body').should(($body) => {
-      expect($body.find('table tbody tr').text()).not.to.include(name);
-    });
-  }
-
-  removeIfPresent(name) {
-    this.visit();
-    this.search(name);
-
-    cy.get('body').then(($body) => {
-      if ($body.find('table tbody tr').filter((_, row) => row.textContent.includes(name)).length) {
-        this.remove(name);
-      }
-    });
+    cy.get('[role="dialog"]').should('not.exist');
+    return this.roomRow(name).should('contain.text', location);
   }
 }

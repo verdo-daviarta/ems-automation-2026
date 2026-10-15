@@ -1,6 +1,47 @@
 # Validasi EMS QA Automation
 
-## FEAT-006 / TS-009 notifikasi CRUD — 15 Oktober 2026
+## FEAT-006 / TS-009 assertion pesan Update — 15 Oktober 2026
+
+Pesan update Room pada UI memakai format `Room Name "<nama>", Location
+"<lokasi>" has been Updated`, berbeda dari pesan create `Room "<nama>" has
+been Created`. Assertion sebelumnya mengharapkan `Room "<nama>" has been
+Updated`, sehingga Fail meskipun notifikasi update ada. Assertion sekarang
+memastikan baris untuk nama Room unik memuat aksi `Updated`; pesan dari Room
+lain tidak dapat meluluskan test.
+
+Run Cypress `--headed` pada staging build `v1.0.5-staging`, ID
+`2026-10-15T09-25-54-257Z-97d16c99`: **2 Pass, 0 Fail** untuk subcakupan
+Admin Create/Update → PJ dan Komandan tanpa fitur notifikasi. `npm run check`
+Pass: 35 file JavaScript, 17 unit test, dan 9 Test ID starter. Room dari run
+ini dipertahankan karena Delete ditunda. Admin sebagai penerima, asal badge,
+dan push Socket.IO real-time belum teruji. Status manual snapshot tidak diubah.
+
+## FEAT-006 / TS-009 flow CRU — 15 Oktober 2026
+
+Spec Cypress sekarang menjalankan Admin Create Room → PJ memeriksa `Created` →
+Admin Update lokasi Room yang sama → PJ memeriksa `Updated`. Komandan diperiksa
+tidak mempunyai fitur notifikasi. Delete, termasuk cleanup otomatis, tidak
+dijalankan pada fase ini. Room uji memakai nama unik `QA-TS009-admin-<waktu>`
+dan dipertahankan untuk fase Delete. Badge diperiksa tampil, tetapi belum
+dibuktikan muncul akibat event baru bila sebelumnya sudah ada unread.
+
+Run staging `2026-10-15T07-46-01-505Z-6238fa0b`, build `v1.0.5-staging`:
+**1 Pass, 2 Fail** pada versi dua arah. Create Admin berhasil dan PJ melihat
+pesan `Created` untuk Room `QA-TS009-admin-1792050372503`. Update lokasi Room
+berhasil (`PATCH 200`, lokasi baru tampil di daftar), tetapi pesan `Updated`
+tidak ditemukan pada daftar notifikasi PJ. Pengecekan Komandan tanpa fitur
+notifikasi Pass. Room uji tersebut tetap ada sesuai fase CRU tanpa Delete.
+
+Percobaan PJ sebagai aktor gagal sebelum Create: halaman Rooms PJ tidak
+menampilkan tombol `Add room` maupun `Edit`. Pemeriksaan read-only Komandan
+`2026-10-15T07-48-07-800Z-89dd8f6e` juga tidak menemukan `Add room`; role
+tersebut hanya memiliki tindakan lihat. Akun `user` dengan izin CRU Room belum
+dikonfigurasi. Karena itu arah menuju Admin sebagai penerima dikeluarkan dari
+spec aktif sampai aktor lain tersedia. Pada run tersebut, kegagalan `Updated`
+tetap dicatat sebagai Fail sampai format pesan UI yang sebenarnya dibuktikan.
+Status manual snapshot tidak diubah.
+
+## Riwayat FEAT-006 / TS-009 flow CRUD sebelumnya — 15 Oktober 2026
 
 Target `http://ems.10.70.0.45.nip.io/`, build `v1.0.5-staging`.
 Spec Cypress baru menguji CRUD Room dengan nama unik dari `admin` ke `pj` dan
@@ -19,14 +60,9 @@ menampilkan halaman error yang sama. **Status TS-009: Blocked**, bukan Pass;
 hasil manual pada snapshot tidak diubah.
 
 Room `QA-TS009-admin-1792037443356` dibuat pada run diagnostik pertama dan
-belum dapat dipastikan terhapus. Hapus hanya Room bernama persis demikian saat
-staging kembali sehat. Hook cleanup pada versi akhir telah dipisah per pasangan
-role dan memeriksa respons Delete; versi akhir belum dijalankan ulang di staging
-karena halaman error tersebut. Setelah cleanup, jalankan ulang spec tunggal:
-
-```powershell
-npm.cmd run cy:run -- --spec cypress/e2e/FEAT-006-notifications/notification-crud.cy.js
-```
+belum dapat dipastikan terhapus. Catat nama persis ini untuk fase Delete nanti;
+jangan hapus pada fase CRU saat ini. Hook cleanup dari versi lama telah dihapus
+dari spec aktif.
 
 Pemeriksaan akhir `npm run check` **Pass** (35 file JavaScript, 17 unit test,
 9 Test ID pada mapping). Regresi Cypress demo saja, run
