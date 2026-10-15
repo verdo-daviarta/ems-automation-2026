@@ -4,10 +4,13 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import { startDemo } from '../demo/server.mjs';
+
 const require = createRequire(import.meta.url);
 const { root, loadEnvironment, readSettings, publicSettings } = require('../shared/settings.cjs');
+
 loadEnvironment();
 process.chdir(root);
+
 const [targetArg = 'configured', engine = 'all', ...extra] = process.argv.slice(2);
 if (
   !['demo', 'staging', 'configured'].includes(targetArg) ||
@@ -18,20 +21,26 @@ if (
   );
   process.exit(1);
 }
-if (targetArg !== 'configured') process.env.QA_TARGET = targetArg;
+if (targetArg !== 'configured') {
+  process.env.QA_TARGET = targetArg;
+}
+
 process.env.QA_TARGET ||= 'demo';
 process.env.QA_RUN_ID = `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID().slice(0, 8)}`;
+
 let demo;
 let activeChild;
 let recordDir;
 const engineExitCodes = [];
 let frameworkError;
+
 function stopDemo() {
   if (demo) {
     demo.server.closeAllConnections();
     demo.server.close();
   }
 }
+
 for (const signal of ['SIGINT', 'SIGTERM'])
   process.once(signal, () => {
     activeChild?.kill(signal);
@@ -91,7 +100,9 @@ try {
       cypressEnv
     );
     engineExitCodes.push({ engine: 'cypress', exitCode: result });
-    if (result) code = result;
+    if (result) {
+      code = result;
+    }
   }
   if (engine === 'all' || engine.startsWith('playwright')) {
     const cli = require.resolve('@playwright/test/cli');
@@ -101,7 +112,9 @@ try {
       ...extra
     ]);
     engineExitCodes.push({ engine: 'playwright', exitCode: result });
-    if (result) code = result;
+    if (result) {
+      code = result;
+    }
   }
   console.log(`Laporan tersimpan: reports/runs/${settings.runId}`);
   process.exitCode = code;
@@ -110,7 +123,7 @@ try {
   console.error(error.message);
   process.exitCode = 1;
 } finally {
-  if (recordDir)
+  if (recordDir) {
     fs.writeFileSync(
       path.join(recordDir, 'execution.json'),
       JSON.stringify(
@@ -125,5 +138,7 @@ try {
         2
       ) + '\n'
     );
+  }
+
   stopDemo();
 }

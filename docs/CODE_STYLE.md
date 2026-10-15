@@ -3,8 +3,9 @@
 Gunakan JavaScript ES Modules untuk source `.js`, CommonJS untuk helper `.cjs`,
 dan `.mjs` untuk script Node. Import relatif selalu menyebut ekstensi file.
 Indentasi dua spasi, titik koma, petik tunggal pada JavaScript, dan panjang baris
-sekitar 100 karakter dijaga oleh Prettier. Jalankan `npm run format` setelah
-mengedit dan `npm run check` sebelum menyerahkan perubahan.
+sekitar 100 karakter dijaga oleh Prettier untuk JavaScript, JSON, HTML, dan CSS.
+Gunakan kurung kurawal untuk blok `if`/`else`, termasuk guard clause. Jalankan
+`npm run format` setelah mengedit dan `npm run check` sebelum menyerahkan perubahan.
 
 ## Tanggung jawab file
 
@@ -21,13 +22,25 @@ mengedit dan `npm run check` sebelum menyerahkan perubahan.
 - `catalog/automation-map.json` mencatat subcakupan, sisa cakupan, dan bukti run.
   Snapshot `catalog/test-scenarios.json` tidak diformat ulang atau diubah hanya
   karena automation bertambah.
+- `demo/public/` berisi HTML, CSS, dan JavaScript UI demo; `demo/server.mjs`
+  hanya menangani server dan data demo. Demo bukan kontrak tampilan staging.
 
 ## Menulis test
 
 Nama variabel menjelaskan perannya, misalnya `loginPage`, `attempt`, dan
-`wrongPassword`. Pisahkan setup, tindakan, dan assertion agar alur dapat dibaca
-dari atas ke bawah. Ekstrak helper ketika satu bagian punya tanggung jawab jelas
-atau dipakai ulang; hindari wrapper yang hanya mengganti nama satu pemanggilan.
+`wrongPassword`. Urutkan spec sebagai **setup → tindakan → assertion**, dengan
+baris kosong di antara tahap. Buat Page Object di dalam test agar state tidak
+dibagi antartest. Letakkan locator dan interaksi halaman di Page Object;
+custom command/fixture hanya menyusun alur yang dipakai ulang. Assertion hasil
+bisnis tetap terlihat di spec. Ekstrak helper ketika satu bagian punya
+tanggung jawab jelas atau dipakai ulang; hindari wrapper yang hanya mengganti
+nama satu pemanggilan.
+
+Page Object login pada kedua runner menerima object account berisi `email` dan
+`password`. Properti `email` adalah nama internal lama dan dapat berisi ID atau
+username staging; field UI diberi nama `identifierField` agar tidak
+menyesatkan. Gunakan method `assert...` pada Cypress dan `expect...` pada
+Playwright untuk assertion state halaman sesuai idiom runner masing-masing.
 
 Gunakan retry assertion Cypress atau locator Playwright untuk menunggu kondisi.
 Untuk request yang menentukan langkah berikutnya, sinkronkan dengan request atau

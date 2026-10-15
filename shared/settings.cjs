@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const dotenv = require('dotenv');
+
 const root = path.resolve(__dirname, '..');
 const allowedRoles = ['admin', 'pj', 'komandan', 'user'];
 
@@ -10,7 +11,10 @@ function loadEnvironment() {
 }
 
 function requireValue(env, key) {
-  if (!env[key]?.trim()) throw new Error(`${key} belum diisi. Periksa .env.`);
+  if (!env[key]?.trim()) {
+    throw new Error(`${key} belum diisi. Periksa .env.`);
+  }
+
   return env[key].trim();
 }
 
@@ -19,7 +23,10 @@ function loginIdentity(env, role) {
   const key = [`${prefix}_ID`, `${prefix}_USERNAME`, `${prefix}_EMAIL`].find((name) =>
     env[name]?.trim()
   );
-  if (!key) throw new Error(`${prefix}_ID belum diisi. Alias _USERNAME atau _EMAIL juga didukung.`);
+  if (!key) {
+    throw new Error(`${prefix}_ID belum diisi. Alias _USERNAME atau _EMAIL juga didukung.`);
+  }
+
   return requireValue(env, key);
 }
 
@@ -33,7 +40,10 @@ function httpUrl(value, name) {
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
     throw new Error(`${name} harus HTTP/HTTPS tanpa credential di URL.`);
   }
-  if (url.search || url.hash) throw new Error(`${name} tidak boleh berisi query/hash.`);
+  if (url.search || url.hash) {
+    throw new Error(`${name} tidak boleh berisi query/hash.`);
+  }
+
   return url.href.replace(/\/$/, '');
 }
 
@@ -90,13 +100,19 @@ function validateContract(contract) {
   }
 
   for (const [name, value] of Object.entries(contract.selectors)) {
-    if (!value?.trim()) throw new Error(`Selector ${name} belum diisi.`);
+    if (!value?.trim()) {
+      throw new Error(`Selector ${name} belum diisi.`);
+    }
   }
 
-  if (!contract.api.enabled) return;
+  if (!contract.api.enabled) {
+    return;
+  }
 
   for (const name of ['loginPath', 'emailField', 'passwordField', 'messageField']) {
-    if (!contract.api[name]?.trim()) throw new Error(`Kontrak API ${name} belum diisi.`);
+    if (!contract.api[name]?.trim()) {
+      throw new Error(`Kontrak API ${name} belum diisi.`);
+    }
   }
   if (!contract.api.loginPath.startsWith('/') || contract.api.loginPath.startsWith('//')) {
     throw new Error('API loginPath harus path lokal.');
@@ -108,7 +124,10 @@ function validateContract(contract) {
 
 function readSettings(env = process.env) {
   const target = env.QA_TARGET || 'demo';
-  if (!['demo', 'staging'].includes(target)) throw new Error('QA_TARGET harus demo atau staging.');
+  if (!['demo', 'staging'].includes(target)) {
+    throw new Error('QA_TARGET harus demo atau staging.');
+  }
+
   const contract = JSON.parse(fs.readFileSync(path.join(root, 'config', `${target}.json`), 'utf8'));
   const demoUrl = env.QA_DEMO_URL || 'http://127.0.0.1:4173';
   const baseURL = httpUrl(

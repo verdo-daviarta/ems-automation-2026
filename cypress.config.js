@@ -8,7 +8,9 @@ const rateLimitRunEnabled = process.env.QA_RUN_RATE_LIMIT === '1';
 const rateLimit = settings.contract.rateLimit;
 
 function validateRateLimitConfiguration() {
-  if (!rateLimitRunEnabled) return;
+  if (!rateLimitRunEnabled) {
+    return;
+  }
 
   if (
     !rateLimit ||
@@ -22,7 +24,9 @@ function validateRateLimitConfiguration() {
 }
 
 function getRateLimitAccount() {
-  if (!rateLimit) return undefined;
+  if (!rateLimit) {
+    return undefined;
+  }
 
   const account =
     settings.target === 'demo'
@@ -51,12 +55,17 @@ function allowHttpStagingOrigin(browser, launchOptions) {
   preferences.https_upgrades ??= {};
   preferences.https_upgrades.policy ??= {};
   const allowlist = (preferences.https_upgrades.policy.http_allowlist ??= []);
-  if (!allowlist.includes(host)) allowlist.push(host);
+  if (!allowlist.includes(host)) {
+    allowlist.push(host);
+  }
+
   return launchOptions;
 }
 
 function recordRunSummary(results) {
-  if (!('runs' in results)) return;
+  if (!('runs' in results)) {
+    return;
+  }
 
   const tests = results.runs.flatMap((run) =>
     run.tests.map((test) => ({

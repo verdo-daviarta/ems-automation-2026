@@ -1,13 +1,33 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { startDemo } from '../demo/server.mjs';
+
 let demo;
+
 before(async () => {
   demo = await startDemo(0);
 });
+
 after(() => {
   demo.server.closeAllConnections();
   demo.server.close();
+});
+
+test('demo melayani halaman dan asset UI dari file terpisah', async () => {
+  const loginPage = await fetch(`${demo.url}/login`);
+  assert.equal(loginPage.status, 200);
+  assert.match(await loginPage.text(), /<script type="module" src="\/demo\/login\.js"><\/script>/);
+
+  for (const [file, contentType] of [
+    ['style.css', 'text/css'],
+    ['login.js', 'text/javascript'],
+    ['dashboard.js', 'text/javascript']
+  ]) {
+    const asset = await fetch(`${demo.url}/demo/${file}`);
+    assert.equal(asset.status, 200);
+    assert.match(asset.headers.get('content-type'), new RegExp(contentType));
+    assert.ok((await asset.text()).length > 0);
+  }
 });
 
 test('demo tidak mengizinkan dashboard tanpa session', async () => {
@@ -15,6 +35,7 @@ test('demo tidak mengizinkan dashboard tanpa session', async () => {
   assert.equal(response.status, 302);
   assert.equal(response.headers.get('location'), '/login');
 });
+
 for (const role of ['admin', 'pj', 'user']) {
   test(`session demo ${role} berlaku setelah login dan dicabut setelah logout`, async () => {
     const login = await fetch(`${demo.url}/api/login`, {
@@ -42,6 +63,7 @@ for (const role of ['admin', 'pj', 'user']) {
     assert.equal(dashboardAfterLogout.status, 302);
   });
 }
+
 test('demo tidak mengungkap keberadaan akun dari status/pesan invalid login', async () => {
   const responses = [];
   for (const email of ['admin@ems-demo.test', 'unknown@example.invalid']) {

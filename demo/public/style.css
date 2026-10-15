@@ -1,0 +1,63 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f3f5f7;
+  color: #17233a;
+  font: 16px system-ui;
+}
+
+main {
+  width: min(460px, 100%);
+  padding: 24px;
+  margin: 40px auto;
+}
+
+form,
+section {
+  padding: 20px;
+  border: 1px solid #ccd3dc;
+  border-radius: 8px;
+  background: white;
+}
+
+label {
+  display: block;
+  margin: 16px 0 6px;
+}
+
+input,
+button {
+  width: 100%;
+  max-width: 100%;
+  padding: 12px;
+  font: inherit;
+}
+
+button {
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+h1 {
+  overflow-wrap: anywhere;
+  font-size: 24px;
+}
+
+.error {
+  color: #b42318;
+}
+
+small {
+  display: block;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 400px) {
+  main {
+    padding: 12px;
+    margin-top: 12px;
+  }
+}

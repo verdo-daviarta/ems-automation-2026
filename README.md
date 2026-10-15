@@ -118,6 +118,18 @@ Dalam run headless tanpa flag tersebut, TS-004 dilaporkan Not Run. Test mengirim
 
 Pada build staging `v1.0.5-staging`, assertion toast bertanggal terbaru masih **Fail**; lihat `docs/VALIDATION.md` untuk hasil dan pesan aktual.
 
+TS-009 memakai Cypress untuk memicu Create/Update/Delete pada Room uji unik,
+lalu memeriksa notifikasi setelah login sebagai role penerima. Jalankan spec
+tunggal berikut setelah staging dan login semua role kembali sehat:
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-006-notifications/notification-crud.cy.js
+```
+
+Saat ini verifikasi TS-009 **Blocked** oleh halaman error dan login staging;
+lihat `docs/VALIDATION.md` untuk run serta Room uji yang masih perlu dibersihkan.
+Test belum mencakup pembaruan Socket.IO secara real-time.
+
 `test:staging` selalu memilih staging, meskipun `.env` masih menyebut demo. Bila konfigurasi tidak lengkap, perintah gagal dengan pesan yang jelas; tidak fallback ke demo. `cy:open`, `cy:run`, `pw:run`, dan `pw:ui` mengikuti `QA_TARGET` pada `.env`.
 
 Untuk Cypress UI di Windows, gunakan `npm run cy:open`. Script ini membersihkan `ELECTRON_RUN_AS_NODE` dari proses Cypress. Jika menjalankan `npx cypress open` langsung dari PowerShell dan variabel itu bernilai `1`, hapus dari terminal tersebut terlebih dahulu dengan `Remove-Item Env:ELECTRON_RUN_AS_NODE`. Konfigurasi Cypress juga memasukkan host staging HTTP ke allowlist Chrome agar runner tidak terus dialihkan ke HTTPS dan memuat ulang.
@@ -193,7 +205,7 @@ playwright/tests/       API, mobile, responsive
 playwright/reporters/   Laporan JSON dengan Test ID
 catalog/                Snapshot sheet dan pemetaan implementasi
 checks/                 Pemeriksaan guard konfigurasi
-demo/                   Aplikasi fiktif untuk verifikasi framework
+demo/                   Server dan asset UI fiktif untuk verifikasi framework
 scripts/                Setup dan command runner lintas OS
 .vscode/                Tasks dan rekomendasi extension
 AGENTS.md               Instruksi kerja untuk Codex
@@ -214,7 +226,7 @@ mengubah environment Windows.
 
 - **Spec (`e2e/FEAT-xxx-<fitur>/`)** menyusun skenario, data uji, dan assertion expected result. Satu file boleh memuat beberapa TS dalam satu FEAT; judul test memakai `[FEAT-xxx] [TS-xxx]` sesuai catalog. Skenario `CROSS-*` dikelompokkan terpisah menurut cakupannya.
 - **Page Object (`pages/<halaman>/`)** menyediakan locator dan interaksi sesuai halaman UI. `LoginPage` menangani form dan toggle password; `DashboardPage` menangani kesiapan dashboard dan logout. Keduanya mengambil selector dari `config/<target>.json` tanpa menyimpan credential, DOM element, atau session antar-test.
-- **Custom command (`support/commands.js`)** mengatur auth bersama melalui `cy.loginAs(role)` dan `cy.logoutEMS()`. Jangan menyalin login ke setiap Page Object.
+- **Custom command (`support/commands.js`)** mengatur login bersama melalui `cy.loginAs(role)`. Aksi logout tetap memakai `DashboardPage.logout()` agar tidak ada wrapper satu baris.
 - **Fixture (`fixtures/`)** hanya untuk data nonrahasia yang memang digunakan ulang. Credential tetap dari environment.
 
 Contoh spec login kosong dapat dibaca di `cypress/e2e/FEAT-001-login/login.cy.js`: kunjungi halaman, submit, lalu assert error dan dashboard tidak tampil. Untuk fitur berikutnya, tambahkan folder FEAT dan Page Object ketika implementasi dimulai. Kedua runner tetap independen; Page Object Cypress tidak digunakan oleh Playwright.

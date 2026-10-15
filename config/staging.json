@@ -1,6 +1,11 @@
 {
   "reviewed": true,
-  "routes": { "login": "/login", "dashboard": "/dashboard" },
+  "routes": {
+    "login": "/login",
+    "dashboard": "/dashboard",
+    "rooms": "/rooms",
+    "notification": "/notification"
+  },
   "selectors": {
     "email": "input[name=\"username\"]",
     "password": "input[name=\"password\"]",

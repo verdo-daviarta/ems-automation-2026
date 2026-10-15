@@ -34,7 +34,7 @@ environment/objek yang dibutuhkan setiap test. Contoh `playwright/fixtures/ems.j
 - `page`: tab browser dalam context baru untuk setiap test UI.
 - `request`: client HTTP untuk test API.
 - `settings`: konfigurasi target EMS.
-- `auth`: helper fixture yang menyusun `LoginPage` dan `DashboardPage` untuk login/logout melalui UI.
+- `auth`: helper fixture yang menyusun login melalui `LoginPage` memakai role terkonfigurasi.
 
 Import `test` dan `expect` dari fixture project (`../../fixtures/ems.js` untuk spec yang
 saat ini berada di `tests/api`, `tests/mobile`, dan `tests/responsive`) agar `settings`
@@ -48,13 +48,13 @@ Buka `playwright/tests/mobile/critical-flow.spec.js`. Alurnya:
 
 1. Fixture memberikan `page`, `auth`, dan `settings`.
 2. `await auth.login(settings.roles[0])` login memakai role pertama yang dikonfigurasi.
-3. Assertion memastikan tombol logout dalam viewport dan tidak ada horizontal overflow.
-4. `await auth.logout()` mengakhiri session.
+3. Assertion memastikan dashboard siap, tombol logout dalam viewport, dan tidak ada horizontal overflow.
+4. `await dashboardPage.logout()` mengakhiri session; spec memeriksa halaman login terlihat lagi.
 
 Selector dan interaksi form berada di `playwright/pages/auth/LoginPage.js`, sedangkan
 kesiapan dashboard dan logout di `playwright/pages/dashboard/DashboardPage.js`.
-Fixture `playwright/fixtures/ems.js` menyusun keduanya tanpa mengubah cara spec memanggil
-`auth.login()` dan `auth.logout()`. Pada API spec, HTTP status diperiksa
+Fixture `playwright/fixtures/ems.js` menyusun login melalui `auth.login()`.
+Pada API spec, HTTP status diperiksa
 bersama tipe, isi, dan kesamaan pesan error; tidak hanya status code.
 
 ## Jalankan bertahap dari terminal root project

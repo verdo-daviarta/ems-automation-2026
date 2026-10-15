@@ -21,8 +21,8 @@ export class LoginPage {
     await this.page.goto(this.settings.contract.routes.login);
   }
 
-  async fillCredentials(role) {
-    const account = this.settings.credentials[role];
+  /** @param {{ email: string, password: string }} account */
+  async fillCredentials(account) {
     await this.identifierField.fill(account.email);
     await this.passwordField.fill(account.password);
   }

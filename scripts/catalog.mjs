@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+
 const require = createRequire(import.meta.url);
 const { root } = require('../shared/settings.cjs');
 const catalog = JSON.parse(
@@ -11,13 +12,24 @@ const scenarios = new Map(catalog.scenarios.map((s) => [s.testId, s]));
 const ids = new Set(scenarios.keys());
 const seen = new Set();
 for (const entry of map.implementations) {
-  if (!ids.has(entry.testId)) throw new Error(`Unknown Test ID: ${entry.testId}`);
-  if (seen.has(entry.testId)) throw new Error(`Duplicate implementation: ${entry.testId}`);
+  if (!ids.has(entry.testId)) {
+    throw new Error(`Unknown Test ID: ${entry.testId}`);
+  }
+  if (seen.has(entry.testId)) {
+    throw new Error(`Duplicate implementation: ${entry.testId}`);
+  }
+
   seen.add(entry.testId);
   const file = path.join(root, entry.file);
-  if (!fs.existsSync(file)) throw new Error(`Missing file: ${entry.file}`);
+  if (!fs.existsSync(file)) {
+    throw new Error(`Missing file: ${entry.file}`);
+  }
+
   const source = fs.readFileSync(file, 'utf8');
-  if (!source.includes(entry.testId)) throw new Error(`File does not reference ${entry.testId}`);
+  if (!source.includes(entry.testId)) {
+    throw new Error(`File does not reference ${entry.testId}`);
+  }
+
   const featureId = scenarios.get(entry.testId).featureId;
   if (entry.engine === 'cypress' && featureId.startsWith('FEAT-')) {
     if (!entry.file.startsWith(`cypress/e2e/${featureId}-`))

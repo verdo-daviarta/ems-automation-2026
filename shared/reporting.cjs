@@ -6,11 +6,19 @@ function testId(title) {
   return title.match(/\bTS-\d{3}\b/)?.[0] || null;
 }
 function playwrightStatus(state, errorMessage = '') {
-  if (state === 'passed') return 'Pass';
-  if (state === 'skipped') return 'Not Run';
-  if (/browserType\.launch: Executable doesn't exist/.test(errorMessage)) return 'Blocked';
+  if (state === 'passed') {
+    return 'Pass';
+  }
+  if (state === 'skipped') {
+    return 'Not Run';
+  }
+  if (/browserType\.launch: Executable doesn't exist/.test(errorMessage)) {
+    return 'Blocked';
+  }
+
   return 'Fail';
 }
+
 function writeSummary(engine, settings, tests, extra = {}) {
   const counts = tests.reduce((out, t) => {
     out[t.status] = (out[t.status] || 0) + 1;

@@ -1,5 +1,57 @@
 # Validasi EMS QA Automation
 
+## FEAT-006 / TS-009 notifikasi CRUD — 15 Oktober 2026
+
+Target `http://ems.10.70.0.45.nip.io/`, build `v1.0.5-staging`.
+Spec Cypress baru menguji CRUD Room dengan nama unik dari `admin` ke `pj` dan
+sebaliknya, memeriksa tiga pesan pada daftar notifikasi setelah penerima login,
+serta memastikan `komandan` tidak mempunyai fitur notifikasi. Cakupan awal ini
+belum membuktikan push Socket.IO saat penerima tetap online.
+
+Run staging `2026-10-15T04-13-14-380Z-6b0a06d9` berakhir dengan 0 Pass,
+2 Fail, 1 Skipped sebelum mencapai assertion notifikasi: Admin berhasil
+Create, Update (`PATCH 200`), dan Delete Room uji,
+tetapi login PJ berakhir pada halaman `System Experiencing Issues`. Login PJ
+berikutnya tetap di `/login` meskipun request `/login` merespons `200`.
+Percobaan cleanup terpisah `2026-10-15T04-15-00-001Z-87888f34` juga tertahan
+karena login Admin tetap di `/login`. Browser yang sudah memiliki sesi Admin
+menampilkan halaman error yang sama. **Status TS-009: Blocked**, bukan Pass;
+hasil manual pada snapshot tidak diubah.
+
+Room `QA-TS009-admin-1792037443356` dibuat pada run diagnostik pertama dan
+belum dapat dipastikan terhapus. Hapus hanya Room bernama persis demikian saat
+staging kembali sehat. Hook cleanup pada versi akhir telah dipisah per pasangan
+role dan memeriksa respons Delete; versi akhir belum dijalankan ulang di staging
+karena halaman error tersebut. Setelah cleanup, jalankan ulang spec tunggal:
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-006-notifications/notification-crud.cy.js
+```
+
+Pemeriksaan akhir `npm run check` **Pass** (35 file JavaScript, 17 unit test,
+9 Test ID pada mapping). Regresi Cypress demo saja, run
+`2026-10-15T04-18-07-727Z-e03528df`, **8 Pass, 4 Pending**; tiga test TS-009
+Pending karena memang khusus staging. Playwright tidak dijalankan.
+
+## Konsistensi kode dan TS-004 — 15 Oktober 2026
+
+Spec dan Page Object diseragamkan: Page Object dibuat per test, tindakan login
+bersama tetap di helper, sedangkan assertion hasil skenario terlihat di spec.
+UI demo dipisah dari server ke file HTML, CSS, dan JavaScript agar kode browser
+diperiksa sintaks serta formatnya bersama source lain.
+
+Sebelum perbaikan, TS-004 pada demo gagal karena assertion percobaan pertama
+justru mengharapkan akun sudah terkunci dan assertion akhir mengharapkan pesan
+penguncian tidak cocok. Setelah assertion dikembalikan sesuai skenario, target
+`demo`, build `framework-demo-v1`, run
+`2026-10-15T03-11-01-122Z-a9a51ff6`: Cypress TS-004 **Pass 1/1** dengan akun
+fiktif. `npm run check` lulus (32 file JavaScript, 17 unit test, mapping 8 Test
+ID). Regresi demo `2026-10-15T03-14-22-454Z-12e5b5d1`: Cypress **8 Pass** dan
+TS-004 **Pending** tanpa opt-in; Playwright yang sudah ada **5 Pass**. Tidak ada
+implementasi TS-004 di Playwright. Staging tidak dijalankan karena dapat
+mengunci akun `komandan`; perbedaan format toast staging yang tercatat di bawah
+belum terselesaikan.
+
 ## FEAT-004 / TS-004 Pending di Cypress Open — 14 Oktober 2026
 
 Status Pending pada runner interaktif berasal dari `it.skip` saat

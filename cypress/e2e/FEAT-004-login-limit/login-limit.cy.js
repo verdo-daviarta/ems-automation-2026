@@ -15,7 +15,10 @@ function assertLockedToast() {
       .toArray()
       .map((toast) => toast.textContent.trim());
 
-    if (visibleMessages.length) lastObservedMessage = visibleMessages[0];
+    if (visibleMessages.length) {
+      lastObservedMessage = visibleMessages[0];
+    }
+
     expect(
       visibleMessages.some((message) => lockToastMessage.test(message)),
       lastObservedMessage
@@ -31,14 +34,6 @@ function submitInvalidLogin(loginPage, account, wrongPassword, attempt) {
     expect(response, `respons login ke-${attempt}`).to.exist;
   });
   loginPage.assertLoginVisible();
-
-  if (attempt === 1) {
-    cy.get(toastSelector)
-      .first()
-      .should('be.visible')
-      .invoke('text')
-      .should('match', /Akun terkunci|Terlalu banyak percobaan login/i);
-  }
 }
 
 describe('EMS login limitation @rate-limit', () => {
@@ -50,10 +45,14 @@ describe('EMS login limitation @rate-limit', () => {
     const { rateLimit } = contract;
 
     expect(rateLimit.attemptsBeforeLockCheck).to.be.greaterThan(20);
-    if (target === 'staging') expect(rateLimit.role).to.equal('komandan');
+    if (target === 'staging') {
+      expect(rateLimit.role).to.equal('komandan');
+    }
 
     cy.env(['rateLimitAccount'], { log: false }).then(({ rateLimitAccount }) => {
-      if (!rateLimitAccount) throw new Error('Akun untuk TS-004 belum dikonfigurasi.');
+      if (!rateLimitAccount) {
+        throw new Error('Akun untuk TS-004 belum dikonfigurasi.');
+      }
 
       const wrongPassword = `WrongForTS004!${Date.now()}`;
       if (wrongPassword === rateLimitAccount.password) {
@@ -65,6 +64,14 @@ describe('EMS login limitation @rate-limit', () => {
 
       for (let attempt = 1; attempt <= rateLimit.attemptsBeforeLockCheck; attempt++) {
         submitInvalidLogin(loginPage, rateLimitAccount, wrongPassword, attempt);
+
+        if (attempt === 1) {
+          cy.get(toastSelector)
+            .first()
+            .should('be.visible')
+            .invoke('text')
+            .should('match', /Akun terkunci|Terlalu banyak percobaan login/i);
+        }
       }
 
       assertLockedToast();

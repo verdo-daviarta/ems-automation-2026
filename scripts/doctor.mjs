@@ -1,12 +1,16 @@
 import { createRequire } from 'node:module';
+
 const require = createRequire(import.meta.url);
 const { loadEnvironment, readSettings } = require('../shared/settings.cjs');
+
 try {
   loadEnvironment();
   const settings = readSettings();
   const major = Number(process.versions.node.split('.')[0]);
-  if (!(major === 22 || major === 24 || major >= 26))
+  if (!(major === 22 || major === 24 || major >= 26)) {
     throw new Error('Gunakan Node.js 22, 24, atau 26+. Disarankan Node 24.');
+  }
+
   console.log(
     `Node ${process.versions.node} | Target ${settings.target} | Build ${settings.buildId}`
   );

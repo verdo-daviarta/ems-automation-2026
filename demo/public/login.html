@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EMS Framework Demo — Login</title>
+    <link rel="stylesheet" href="/demo/style.css" />
+  </head>
+  <body>
+    <main>
+      <small>DEMO • Verifikasi framework, bukan aplikasi EMS</small>
+      <h1>Masuk EMS Demo</h1>
+      <form novalidate>
+        <label for="email">Email</label>
+        <input id="email" data-testid="login-email" autocomplete="username" />
+
+        <label for="password">Password</label>
+        <input
+          id="password"
+          data-testid="login-password"
+          type="password"
+          autocomplete="current-password"
+        />
+        <button
+          type="button"
+          data-testid="toggle-password"
+          aria-label="Tampilkan atau sembunyikan password"
+        >
+          Tampilkan password
+        </button>
+
+        <p hidden class="error" role="alert" data-testid="login-error"></p>
+        <div
+          hidden
+          class="error"
+          role="status"
+          aria-live="polite"
+          data-testid="login-lock-toast"
+        ></div>
+        <button data-testid="login-submit" type="submit">Masuk</button>
+      </form>
+    </main>
+    <script type="module" src="/demo/login.js"></script>
+  </body>
+</html>

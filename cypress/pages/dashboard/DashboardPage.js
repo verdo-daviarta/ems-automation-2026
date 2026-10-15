@@ -4,9 +4,11 @@ export class DashboardPage {
   get contract() {
     return qa().contract;
   }
+
   get ready() {
     return cy.get(this.contract.selectors.dashboardReady);
   }
+
   get logoutButton() {
     return cy.get(this.contract.selectors.logout);
   }
