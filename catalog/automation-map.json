@@ -62,6 +62,23 @@
       }
     },
     {
+      "testId": "TS-025",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-045-create-room/create-room.cy.js",
+      "implementedScope": "Admin membuat satu Room bernama QA-TS025-admin-<timestamp> melalui UI pada setiap run, memeriksa response Create, dan memastikan Room tetap tampil setelah halaman dimuat ulang.",
+      "remainingScope": "Aturan duplicate belum ada di AC; create oleh PJ belum dapat diuji karena tombol Add room tidak tersedia pada akun PJ staging. Keunikan lintas proses paralel pada milidetik yang sama belum dijamin.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-16T06-33-46-176Z-099d3482",
+        "role": "admin",
+        "roomNamePattern": "QA-TS025-admin-<timestamp>",
+        "scope": "Satu Room dibuat melalui Admin dengan nama timestamp unik, response POST sukses, dan Room tetap tampil setelah reload. Nilai nama aktual muncul di log Cypress tetapi tidak dicatat oleh reporter. Duplicate dan PJ belum dicakup; status manual snapshot tidak berubah."
+      }
+    },
+    {
       "testId": "TS-072",
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-002-password/password-visibility.cy.js",
@@ -74,6 +91,21 @@
         "buildId": "v1.0.5-staging",
         "runId": "2026-10-13T04-29-24-568Z-fa5971b8",
         "scope": "implementedScope only; manual snapshot unchanged"
+      }
+    },
+    {
+      "testId": "TS-073",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-007-breadcrumb/breadcrumb.cy.js",
+      "implementedScope": "Setiap role terkonfigurasi membuka detail Room uji Server 2 lalu mengklik breadcrumb Rooms dan memeriksa halaman Rooms.",
+      "remainingScope": "PJ dan Komandan belum mencapai assertion breadcrumb karena login staging tidak stabil. Tautan breadcrumb EMS dan halaman bertingkat modul lain belum dibuktikan; test baca-saja bergantung pada Room uji Server 2 tersedia.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Fail",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-16T03-18-58-078Z-99d05c50",
+        "scope": "Admin mencapai detail Server 2; label Rooms di header adalah span, bukan tautan, sehingga navigasi breadcrumb gagal. PJ mendapat halaman System Experiencing Issues dan Komandan tetap di /login sebelum mencapai breadcrumb. Run diagnostik 2026-10-16T03-21-55-711Z-46622bf2 tertahan login untuk semua role. Status manual snapshot tidak berubah."
       }
     },
     {

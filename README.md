@@ -2,7 +2,7 @@
 
 Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
-Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **8 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
+Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **11 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
 
 ## Mulai di VS Code lokal
 
@@ -26,7 +26,7 @@ Demo memakai server lokal yang disertakan dalam proyek, akun fiktif, dan port se
 
 | Runner | Implementasi awal | Alasan |
 | --- | --- | --- |
-| Cypress | TS-001 login UI, TS-002 field kosong, TS-004 pembatasan login (opt-in), TS-006 logout, TS-072 password visibility | Baseline smoke dan skenario pembatasan yang dijalankan terpisah |
+| Cypress | TS-001 login UI, TS-002 field kosong, TS-004 pembatasan login (opt-in), TS-006 logout, TS-009 notifikasi CRU, TS-025 create Room, TS-072 password visibility, TS-073 breadcrumb | Baseline smoke dan skenario staging terarah |
 | Playwright | TS-003 perbandingan error API, TS-046 alur 320 px, TS-071 login pada 320/768/1280 px | Melengkapi cakupan API dan mobile tanpa menduplikasi seluruh suite UI |
 
 Pada demo standar, Cypress menjalankan 8 test instance (login/logout untuk tiga role, validasi kosong, dan toggle password); TS-004 dilewati kecuali diaktifkan secara eksplisit. Playwright memiliki 5 instance (1 API, 1 mobile, 3 viewport). Jumlah instance berbeda dari jumlah Test ID.
@@ -136,6 +136,27 @@ diawali `Room Name`, sedangkan `Created` diawali `Room`. Lihat
 `docs/VALIDATION.md` untuk bukti run dan batas cakupan. Test belum mencakup
 pembaruan Socket.IO secara real-time atau pembuktian bahwa badge baru berasal
 dari event test ini.
+
+TS-073 menguji breadcrumb `Rooms` dari detail Room uji `Server 2` untuk setiap
+role staging. Test ini baca-saja dan memerlukan Room tersebut tetap tersedia:
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-007-breadcrumb/breadcrumb.cy.js
+```
+
+Pada build staging `v1.0.5-staging`, Admin mencapai detail Room tetapi label
+`Rooms` di breadcrumb berupa teks biasa, sehingga navigasi breadcrumb **Fail**.
+PJ dan Komandan belum mencapai assertion breadcrumb karena login staging tidak
+stabil. Lihat `docs/VALIDATION.md` untuk bukti dan batas cakupan.
+
+TS-025 membuat satu Room melalui UI Admin dengan nama unik
+`QA-TS025-admin-<timestamp>` pada tiap run, mengikuti pola TS-009. Nama aktual
+terlihat di log Cypress. Room hasil run dipertahankan; skenario duplicate
+menunggu aturan AC yang jelas.
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-045-create-room/create-room.cy.js
+```
 
 `test:staging` selalu memilih staging, meskipun `.env` masih menyebut demo. Bila konfigurasi tidak lengkap, perintah gagal dengan pesan yang jelas; tidak fallback ke demo. `cy:open`, `cy:run`, `pw:run`, dan `pw:ui` mengikuti `QA_TARGET` pada `.env`.
 

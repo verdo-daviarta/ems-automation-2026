@@ -21,7 +21,14 @@ export class RoomsPage {
   }
 
   roomRow(name) {
-    return cy.contains('table tbody tr', name);
+    return cy
+      .get('table tbody td')
+      .filter((_, cell) => cell.innerText.trim().split('\n')[0].trim() === name)
+      .closest('tr');
+  }
+
+  openDetails(name) {
+    return this.roomRow(name).find(`button[aria-label="View ${name}"]`).click();
   }
 
   create({ name, location, description }) {

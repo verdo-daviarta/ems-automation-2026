@@ -1,5 +1,64 @@
 # Validasi EMS QA Automation
 
+## FEAT-045 / TS-025 create Room — 16 Oktober 2026
+
+Spec Cypress Admin mengisi form untuk satu Room bernama
+`QA-TS025-admin-<timestamp>`, memeriksa response Create, lalu mencari Room
+kembali setelah reload untuk membuktikan data tersimpan. Nama baru dibuat saat
+setiap run; Room hasil run dipertahankan. Snapshot TS-025 juga menyebut
+duplicate, tetapi AC tidak
+menetapkan apakah duplicate harus ditolak atau diizinkan; branch itu belum
+diassert. Akun PJ staging pada inspeksi TS-009 sebelumnya tidak memiliki
+tombol `Add room`, sehingga create PJ juga belum dicakup.
+
+Run Cypress staging build `v1.0.5-staging` dengan role Admin
+`2026-10-16T06-33-46-176Z-099d3482`: **1 Pass, 0 Fail**. Satu Room dengan
+nama berpola `QA-TS025-admin-<timestamp>` berhasil dibuat dan tetap tampil
+setelah reload. Nama aktual tersedia di log Cypress, tetapi reporter saat ini
+hanya menyimpan status test, bukan data Room.
+
+Versi sederhana dengan nama `SD-004` dijalankan pada staging build
+`v1.0.5-staging`, role Admin, run `2026-10-16T06-21-35-220Z-38c323f0`:
+**1 Pass, 0 Fail**. Room `SD-004` tetap tampil setelah reload. Sesudah run ini,
+penamaan statis diganti dengan timestamp; bukti run di atas hanya berlaku untuk
+versi sederhana bernama statis.
+
+Implementasi sebelumnya mencari nomor tersedia secara otomatis. Run staging
+build `v1.0.5-staging` dengan role Admin
+`2026-10-16T04-02-19-048Z-d8872243`: **1 Pass, 0 Fail**. Room `SD-003`
+berhasil dibuat dan ditemukan lagi dengan nama persis serta lokasi yang sama
+setelah reload. Nama hasil run tercatat dalam
+`reports/runs/<run-id>/TS-025-created-room.json`.
+
+Run sebelumnya membuat `SD-001` dan `SD-002`. Run `SD-002` gagal pada selector
+automation karena nama dan lokasi tampil dalam sel tabel yang sama; kegagalan
+terjadi setelah Create sukses. Selector telah diperbaiki untuk membandingkan
+baris nama saja. Di sandbox lokal, proses Cypress gagal sebelum browser dibuka
+dengan `ENOMEM`; run yang menghasilkan bukti Pass memakai proses di luar
+sandbox. Status manual snapshot tidak diubah.
+
+## FEAT-007 / TS-073 breadcrumb — 16 Oktober 2026
+
+Snapshot TS-073 mengharapkan setiap tautan breadcrumb membuka halaman sesuai
+labelnya untuk semua role. Subcakupan Cypress memakai detail Room uji `Server 2`
+sebagai halaman bertingkat: `EMS > Rooms > Server 2`, lalu menguji tautan
+`Rooms` menuju `/rooms`. Test hanya membaca data Room dan tidak mengubahnya.
+
+Inspeksi DOM pada detail Room di staging build `v1.0.5-staging` menunjukkan
+label `EMS` dan `Rooms` adalah elemen `span`; tautan `Back to rooms` tersedia
+terpisah dari breadcrumb. Run Chrome terlihat
+`2026-10-16T03-18-58-078Z-99d05c50`: **0 Pass, 3 Fail**. Admin mencapai detail
+Room dan gagal saat mencari tautan `Rooms` dalam header. PJ terhenti setelah
+login pada halaman `System Experiencing Issues`, sedangkan Komandan tetap di
+`/login`. Karena itu kegagalan breadcrumb telah dikonfirmasi untuk Admin;
+hasil PJ dan Komandan belum membuktikan breadcrumb kedua role tersebut.
+
+Run diagnostik `2026-10-16T03-21-55-711Z-46622bf2` juga **0 Pass, 3 Fail**
+karena ketiga role tetap di `/login` setelah percobaan login. Test tidak
+mengganti tautan breadcrumb dengan `Back to rooms` untuk membuatnya Pass.
+Status manual snapshot tidak diubah. Cakupan tautan `EMS` dan halaman detail
+modul lain masih terbuka.
+
 ## FEAT-006 / TS-009 assertion pesan Update — 15 Oktober 2026
 
 Pesan update Room pada UI memakai format `Room Name "<nama>", Location
