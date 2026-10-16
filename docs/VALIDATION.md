@@ -1,5 +1,66 @@
 # Validasi EMS QA Automation
 
+## FEAT-011 / TS-011 pagination notifikasi — 16 Oktober 2026
+
+Flow saat ini: Admin membuka notifikasi melalui `View all`, memilih `All`,
+lalu memilih 10 rows pada halaman 1, 20 rows pada halaman 2, dan 50 rows pada
+halaman 3. Setelah memilih ukuran, test memastikan posisi kembali ke halaman 1
+sebelum memakai tombol nomor halaman tujuan. Navigasi menunggu respons dan
+memeriksa query `page`; tiap kombinasi memeriksa nilai dropdown dan jumlah
+baris. Dataset memerlukan minimal 150 notifikasi. Kombinasi diatur melalui
+array `paginationCases` pada spec.
+
+Run Cypress staging build `v1.0.5-staging`, role Admin,
+`2026-10-16T08-24-42-870Z-def5e0c5`: **1 Pass, 0 Fail**. Halaman 1
+menampilkan 10 baris, halaman 2 menampilkan 20 baris, dan halaman 3 menampilkan
+50 baris sesuai pilihan dropdown. Pass terbatas pada tiga kombinasi tersebut.
+
+Riwayat flow sebelumnya yang sudah diganti:
+
+Run Cypress staging build `v1.0.5-staging`, role Admin,
+`2026-10-16T08-14-40-334Z-746005e7`: **1 Pass, 0 Fail**. Halaman 1-5
+masing-masing menampilkan 10 baris sesuai `Rows per page = 10`. Pilihan 20/50
+belum dijalankan. `npm.cmd run check` lulus: 40 file JavaScript valid dan
+17 unit test lulus. Pass ini hanya untuk subcakupan jumlah baris yang diminta
+pengguna; pemeriksaan duplikat/ordering dari flow lama tidak tercakup.
+
+Run Cypress TS-011 pada staging build `v1.0.5-staging`
+(`2026-10-16T07-58-48-408Z-4a1c43d2`) menghasilkan **0 Pass, 2 Fail**.
+Admin dan PJ masing-masing menampilkan 19 signature `Date`/`Subject`/`Message`
+unik dari 20 baris pada halaman 1-2. Alur PJ sudah membuat satu Room uji dan
+melihat notifikasi barunya sebelum assertion duplikasi gagal. Navigasi
+`Next`/`Prev` dan kembalinya halaman 1 mencapai assertion; assertion urutan
+tanggal berada setelah pemeriksaan duplikasi sehingga belum dievaluasi.
+
+Inspeksi baca-saja PJ (`2026-10-16T07-52-29-506Z-17d83ccb`) menemukan 10
+baris pada setiap halaman. Navigasi memuat respons `/notification` berformat
+Next.js RSC; tidak ada request `/api/notifications` yang teramati dari browser.
+Baris identik pada dua halaman adalah duplikasi tampilan. Diagnostik Admin
+(`2026-10-16T08-00-29-540Z-14800322`) tidak menemukan ID pada elemen baris;
+identitas record backend belum diketahui. Snapshot status manual tidak diubah.
+
+## FEAT-010 / TS-010 filter dan Read All notifikasi — 16 Oktober 2026
+
+Spec Cypress menyiapkan satu notifikasi baru bagi PJ melalui Create Room oleh
+Admin, lalu memeriksa `View all`, filter `All` dan `Unread`, serta hasil
+`Read All` hingga count unread 0 dan notifikasi tetap ada di `All` setelah
+reload. Room uji dipertahankan. Akun Admin belum mendapat test mutasi berulang
+karena belum ada aktor lain yang dapat menghasilkan unread Admin secara
+deterministik.
+
+Run Cypress TS-010 pada staging build `v1.0.5-staging`
+(`2026-10-16T07-23-55-199Z-88dd8235`) gagal sebelum pembuatan Room: setelah
+`POST /login` mengembalikan HTTP 200, Admin tetap di `/login`. Diagnostik login
+langsung dan `cy.session` (`2026-10-16T07-25-13-757Z-3eaba623`) menunjukkan
+kegagalan yang sama. Belum ada assertion TS-010 untuk PJ yang tercapai.
+
+Inspeksi UI terpisah menemukan 16 unread pada Admin dan PJ. Tombol `Read All`
+terlihat pada tab `Unread` Admin, tetapi tidak tersedia pada tab tersebut untuk
+PJ. Run diagnostik Admin yang disetujui pengguna menandai 16 unread sebagai read
+dan memastikan label `Unread (0)`. Jadi UI PJ saat inspeksi belum memenuhi
+ekspektasi TS-010, terlepas dari kegagalan login pada run spec. Status manual
+snapshot tidak diubah.
+
 ## FEAT-045 / TS-025 create Room — 16 Oktober 2026
 
 Spec Cypress Admin mengisi form untuk satu Room bernama

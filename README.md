@@ -2,7 +2,7 @@
 
 Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
-Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **11 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
+Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **13 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
 
 ## Mulai di VS Code lokal
 
@@ -26,7 +26,7 @@ Demo memakai server lokal yang disertakan dalam proyek, akun fiktif, dan port se
 
 | Runner | Implementasi awal | Alasan |
 | --- | --- | --- |
-| Cypress | TS-001 login UI, TS-002 field kosong, TS-004 pembatasan login (opt-in), TS-006 logout, TS-009 notifikasi CRU, TS-025 create Room, TS-072 password visibility, TS-073 breadcrumb | Baseline smoke dan skenario staging terarah |
+| Cypress | TS-001 login UI, TS-002 field kosong, TS-004 pembatasan login (opt-in), TS-006 logout, TS-009 notifikasi CRU, TS-010 filter/Read All notifikasi, TS-011 pagination notifikasi, TS-025 create Room, TS-072 password visibility, TS-073 breadcrumb | Baseline smoke dan skenario staging terarah |
 | Playwright | TS-003 perbandingan error API, TS-046 alur 320 px, TS-071 login pada 320/768/1280 px | Melengkapi cakupan API dan mobile tanpa menduplikasi seluruh suite UI |
 
 Pada demo standar, Cypress menjalankan 8 test instance (login/logout untuk tiga role, validasi kosong, dan toggle password); TS-004 dilewati kecuali diaktifkan secara eksplisit. Playwright memiliki 5 instance (1 API, 1 mobile, 3 viewport). Jumlah instance berbeda dari jumlah Test ID.
@@ -136,6 +136,30 @@ diawali `Room Name`, sedangkan `Created` diawali `Room`. Lihat
 `docs/VALIDATION.md` untuk bukti run dan batas cakupan. Test belum mencakup
 pembaruan Socket.IO secara real-time atau pembuktian bahwa badge baru berasal
 dari event test ini.
+
+TS-010 memakai satu Room uji baru untuk memastikan PJ mempunyai notifikasi
+unread. PJ lalu membuka `View all`, membandingkan filter `All` dan `Unread`,
+serta menguji `Read All`. Aksi ini menandai **seluruh** unread pada akun PJ;
+jalankan hanya pada akun staging yang memang boleh diubah:
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-010-notification-filter/notification-filter.cy.js
+```
+
+Alur Admin belum diotomatisasi karena belum ada aktor yang bisa menyiapkan
+unread Admin secara deterministik. Pada inspeksi staging 16 Oktober 2026,
+tombol `Read All` PJ belum tersedia; run spec juga tertahan pada login Admin.
+Lihat `docs/VALIDATION.md` sebelum menjalankannya kembali.
+
+TS-011 memakai Admin untuk membuka notifikasi melalui `View all`, memilih
+`All`, lalu memilih `Rows per page` 10 pada halaman 1, 20 pada halaman 2,
+dan 50 pada halaman 3. Setiap kombinasi harus menampilkan jumlah baris sesuai
+pilihan. Ubah array `paginationCases` pada spec untuk mengatur kombinasi uji.
+Dataset harus berisi minimal 150 notifikasi agar halaman 3 dengan 50 rows penuh:
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-011-notification-pagination/notification-pagination.cy.js
+```
 
 TS-073 menguji breadcrumb `Rooms` dari detail Room uji `Server 2` untuk setiap
 role staging. Test ini baca-saja dan memerlukan Room tersebut tetap tersedia:
