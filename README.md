@@ -2,7 +2,7 @@
 
 Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
-Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **13 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
+Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **14 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
 
 ## Mulai di VS Code lokal
 
@@ -26,7 +26,7 @@ Demo memakai server lokal yang disertakan dalam proyek, akun fiktif, dan port se
 
 | Runner | Implementasi awal | Alasan |
 | --- | --- | --- |
-| Cypress | TS-001 login UI, TS-002 field kosong, TS-004 pembatasan login (opt-in), TS-006 logout, TS-009 notifikasi CRU, TS-010 filter/Read All notifikasi, TS-011 pagination notifikasi, TS-025 create Room, TS-072 password visibility, TS-073 breadcrumb | Baseline smoke dan skenario staging terarah |
+| Cypress | TS-001 login UI, TS-002 field kosong, TS-004 pembatasan login (opt-in), TS-006 logout, TS-009 notifikasi CRU, TS-010 filter/Read All notifikasi, TS-011 pagination notifikasi, TS-017 create schedule non-repeat, TS-025 create Room, TS-072 password visibility, TS-073 breadcrumb | Baseline smoke dan skenario staging terarah |
 | Playwright | TS-003 perbandingan error API, TS-046 alur 320 px, TS-071 login pada 320/768/1280 px | Melengkapi cakupan API dan mobile tanpa menduplikasi seluruh suite UI |
 
 Pada demo standar, Cypress menjalankan 8 test instance (login/logout untuk tiga role, validasi kosong, dan toggle password); TS-004 dilewati kecuali diaktifkan secara eksplisit. Playwright memiliki 5 instance (1 API, 1 mobile, 3 viewport). Jumlah instance berbeda dari jumlah Test ID.
@@ -159,6 +159,28 @@ Dataset harus berisi minimal 150 notifikasi agar halaman 3 dengan 50 rows penuh:
 
 ```powershell
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-011-notification-pagination/notification-pagination.cy.js
+```
+
+TS-017 menyiapkan satu schedule non-repeat per role Admin dan PJ. Isi Room uji
+yang boleh dijadwalkan serta `startTime` (`HH:mm`) pada
+`cypress/fixtures/schedules/non-repeat.json` sebelum menjalankan. Kedua nilai
+dibiarkan kosong sampai target dan waktu ditentukan pengguna. Test membuka
+login, menu Schedule, dan form Add schedule sebelum memeriksa fixture. Jika
+Room belum diisi atau waktu tidak berformat `HH:mm`, test berhenti pada form
+dengan pesan konfigurasi; submit belum dilakukan.
+Gunakan waktu mendatang pada hari yang sama agar schedule masuk tab Upcoming.
+Nilai awal aksi adalah `off`, durasi `No end`.
+
+Flow: login PJ/Admin → menu Schedule → Add schedule → isi form → periksa
+toggle off dan label `Repeat off` → Add schedule → Upcoming schedule → cari
+nama schedule → periksa satu hasil dengan Room dan waktu sesuai input.
+Nama schedule menggunakan `QA-TS017-<role>-<timestamp>`. Submit menunggu POST
+201 sebelum pencarian. Hook cleanup menghapus hanya nama/ID milik test dari
+daftar Active/Upcoming, termasuk setelah kegagalan assertion. Eksekusi
+perangkat pada waktu jadwal tidak diuji.
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js
 ```
 
 TS-073 menguji breadcrumb `Rooms` dari detail Room uji `Server 2` untuk setiap

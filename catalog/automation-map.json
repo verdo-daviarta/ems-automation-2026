@@ -93,6 +93,22 @@
       }
     },
     {
+      "testId": "TS-017",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js",
+      "implementedScope": "PJ dan Admin login, membuka menu Schedule dan Add schedule, mengisi form, memeriksa toggle off serta label Repeat off, lalu submit. Setelah POST 201, test membuka Upcoming dan mencari nama unik; memeriksa satu baris dengan Room/waktu sesuai input. Cleanup menghapus hanya schedule milik test dari Active/Upcoming.",
+      "remainingScope": "Create/search/cleanup flow terbaru belum dijalankan end-to-end: Room dan waktu belum ditentukan pengguna. Keunikan ID, persistensi setelah reload, End at, eksekusi perangkat, konflik jadwal, timezone server, dan recurrence tidak termasuk flow sederhana ini. Target aktif masih perlu dikonfirmasi; fixture sengaja belum diisi.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Fail",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-22T09-28-59-664Z-d173c22e",
+        "roles": "admin,pj",
+        "scope": "Run final spec: 0 Pass, 2 Fail karena fixture roomName kosong. PJ dan Admin berhasil login, membuka /schedule lewat menu dan form Add schedule sebelum assertion data berhenti. Tidak ada submit. Sebelumnya assertion fixture berada sebelum login sehingga runner tampak tidak membuka URL; urutan sudah diperbaiki. Preflight form/search tanpa submit 2 Pass pada 2026-10-22T09-23-39-393Z-d26c95e0. Status manual snapshot tidak berubah."
+      }
+    },
+    {
       "testId": "TS-025",
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-045-create-room/create-room.cy.js",

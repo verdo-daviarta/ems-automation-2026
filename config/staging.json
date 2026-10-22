@@ -4,6 +4,7 @@
     "login": "/login",
     "dashboard": "/dashboard",
     "rooms": "/rooms",
+    "schedule": "/schedule",
     "notification": "/notification"
   },
   "selectors": {

@@ -1,5 +1,69 @@
 # Validasi EMS QA Automation
 
+## FEAT-024 / TS-017 tambah schedule non-repeat — 22 Oktober 2026
+
+Flow sederhana saat ini: login PJ/Admin → menu Schedule → Add schedule → isi
+form → verifikasi toggle off dan label `Repeat off` → Add schedule → buka
+Upcoming dan cari nama schedule → verifikasi satu baris dengan Room/waktu
+sesuai input. Nama unik menggunakan `QA-TS017-<role>-<timestamp>`; durasi
+memakai `No end`. Submit disinkronkan dengan POST 201 sebelum pencarian.
+Fixture `cypress/fixtures/schedules/non-repeat.json` menyimpan Room, aksi, dan
+waktu mulai. Room dan waktu belum ditentukan pengguna, sehingga fixture masih
+kosong dan create spec final berstatus **Not Run**. Waktu harus `HH:mm` dan
+dipilih di masa mendatang pada hari yang sama untuk tab Upcoming.
+
+Keluhan runner tidak membuka URL direproduksi pada
+`2026-10-22T09-27-43-015Z-044b01dc`: kedua test berhenti pada assertion
+`roomName` kosong sebelum `cy.loginAs()` dijalankan. `QA_BASE_URL` sudah
+`http://ems.10.70.0.45.nip.io`, route Schedule sudah `/schedule`, dan GET
+`/login` merespons 200. Urutan spec diperbaiki menjadi login → menu Schedule
+→ buka Add schedule → validasi fixture. Fixture kosong tetap menghentikan
+submit dengan pesan yang menjelaskan data yang harus diisi.
+
+Run setelah penyesuaian `2026-10-22T09-28-59-664Z-d173c22e`: **0 Pass,
+2 Fail** akibat fixture `roomName` kosong. PJ dan Admin berhasil login,
+membuka `/schedule` lewat menu, dan menampilkan form Add schedule sebelum
+assertion konfigurasi berhenti. Tidak ada submit atau schedule baru. Error
+yang direproduksi adalah prasyarat data uji, bukan URL yang belum diisi.
+
+Hook cleanup memeriksa daftar Active dan Upcoming lalu menghapus hanya record
+nama/ID milik test, termasuk setelah assertion gagal. Keunikan ID, reload,
+End at, konflik jadwal, timezone server, dan eksekusi perangkat tidak termasuk
+flow sederhana yang dipilih pengguna.
+
+Pemeriksaan flow terbaru tanpa submit,
+`2026-10-22T09-23-39-393Z-d26c95e0`: **2 Pass** untuk PJ/Admin. Menu,
+Upcoming, search kosong, pengisian input, radio No end, checkbox unchecked,
+dan label `Repeat off` terverifikasi; form ditutup dengan Cancel. Pencarian
+cleanup untuk nama yang tidak ada berhasil pada Active/Upcoming. Tidak ada
+schedule baru yang disimpan. Submit, pencarian record baru dan penghapusan
+melalui hook terbaru belum diverifikasi end-to-end.
+
+Inspeksi staging (build terkonfigurasi `v1.0.5-staging`) mengidentifikasi
+route `/schedule` dan backend terpisah
+`http://ems-api.10.70.0.45.nip.io/api/schedules`. GET mengembalikan daftar
+`body.data.data` beserta metadata pagination; search memakai query `search`,
+dan tab Upcoming memakai `status=upcoming`. Form Admin/PJ ditemukan dalam run
+`2026-10-22T09-03-07-765Z-72e95faf` tanpa submit yang diteruskan ke server.
+
+Riwayat preflight sebelum penyederhanaan,
+`2026-10-22T09-07-56-128Z-664a411f`: **1 Pass, 1 Fail**.
+Admin menguji visit, Upcoming, search, field form, serta payload dengan semua
+request perubahan diblokir lokal (respons 503 diagnostik). PJ tertahan pada
+dashboard yang tidak menampilkan heading. Preflight ini bukan bukti create
+schedule berhasil dan tidak dihitung sebagai Pass TS-017.
+
+Pada diagnostik awal, pembatasan intercept ke domain frontend melewatkan
+POST ke domain backend sehingga `QA-TS017-inspection-only` sempat tersimpan
+pada `test room 2`, aksi off pukul 23:55. Record tersebut sudah dihapus;
+run cleanup `2026-10-22T08-59-25-196Z-fa1a9d57` memverifikasi DELETE 204
+dan nama tidak ditemukan setelah reload. Diagnostik sesudahnya memblokir
+seluruh request perubahan lintas domain. Tidak ada klaim eksekusi perangkat.
+Snapshot status manual tetap dipertahankan.
+
+`npm.cmd run check` lulus: 42 file JavaScript valid, 17 unit test lulus, dan
+14 Test ID dipetakan. Tidak ada perubahan dependency atau source Playwright.
+
 ## FEAT-011 / TS-011 pagination notifikasi — 16 Oktober 2026
 
 Flow saat ini: Admin membuka notifikasi melalui `View all`, memilih `All`,
