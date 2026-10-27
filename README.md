@@ -2,7 +2,7 @@
 
 Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
-Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **14 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
+Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **15 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
 
 ## Mulai di VS Code lokal
 
@@ -26,7 +26,7 @@ Demo memakai server lokal yang disertakan dalam proyek, akun fiktif, dan port se
 
 | Runner | Implementasi awal | Alasan |
 | --- | --- | --- |
-| Cypress | TS-001 login UI, TS-002 field kosong, TS-004 pembatasan login (opt-in), TS-006 logout, TS-009 notifikasi CRU, TS-010 filter/Read All notifikasi, TS-011 pagination notifikasi, TS-017 create schedule non-repeat, TS-025 create Room, TS-072 password visibility, TS-073 breadcrumb | Baseline smoke dan skenario staging terarah |
+| Cypress | TS-001 login UI, TS-002 field kosong, TS-004 pembatasan login (opt-in), TS-006 logout, TS-009 notifikasi CRU, TS-010 filter/Read All notifikasi, TS-011 pagination notifikasi, TS-017 create schedule non-repeat, TS-025 create Room, TS-027 export Report, TS-072 password visibility, TS-073 breadcrumb | Baseline smoke dan skenario staging terarah |
 | Playwright | TS-003 perbandingan error API, TS-046 alur 320 px, TS-071 login pada 320/768/1280 px | Melengkapi cakupan API dan mobile tanpa menduplikasi seluruh suite UI |
 
 Pada demo standar, Cypress menjalankan 8 test instance (login/logout untuk tiga role, validasi kosong, dan toggle password); TS-004 dilewati kecuali diaktifkan secara eksplisit. Playwright memiliki 5 instance (1 API, 1 mobile, 3 viewport). Jumlah instance berbeda dari jumlah Test ID.
@@ -210,6 +210,26 @@ menunggu aturan AC yang jelas.
 
 ```powershell
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-045-create-room/create-room.cy.js
+```
+
+TS-027 login sebagai Admin dan membuka menu Report, lalu memilih Export as PDF,
+Export as Excel, dan Export as CSV secara berurutan. Test menunggu endpoint
+export (batas respons 60 detik untuk log berjumlah besar), memeriksa HTTP 200,
+MIME, attachment filename sesuai periode, serta file unduhan baru yang tidak
+kosong. PDF diperiksa header/EOF-nya, XLSX diperiksa signature ZIP dan komponen
+workbook/worksheet, sedangkan CSV diperiksa UTF-8, lima header log energi dan
+keberadaan record bertanggal. Isi lengkap/nilai log dan layout PDF belum dicakup.
+
+Spec berisi alur serta assertion respons export. `ReportPage.exportFile()`
+menangani persiapan download dan interaksi UI; `cypress/support/reportFile.js`
+memisahkan pemeriksaan PDF, Excel, dan CSV dalam fungsi masing-masing.
+
+File tersimpan di `reports/runs/<runId>/cypress-downloads/`. Sebelum tiap
+format diekspor, task hanya menghapus file lama dengan ekstensi format itu di
+folder run saat ini agar rerun runner tidak menggunakan artifact lama.
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-052-export-report/export-report.cy.js
 ```
 
 `test:staging` selalu memilih staging, meskipun `.env` masih menyebut demo. Bila konfigurasi tidak lengkap, perintah gagal dengan pesan yang jelas; tidak fallback ke demo. `cy:open`, `cy:run`, `pw:run`, dan `pw:ui` mengikuti `QA_TARGET` pada `.env`.

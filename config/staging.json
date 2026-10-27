@@ -5,6 +5,7 @@
     "dashboard": "/dashboard",
     "rooms": "/rooms",
     "schedule": "/schedule",
+    "report": "/report",
     "notification": "/notification"
   },
   "selectors": {

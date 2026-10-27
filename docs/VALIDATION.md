@@ -1,5 +1,56 @@
 # Validasi EMS QA Automation
 
+## FEAT-052 / TS-027 export Report PDF, Excel, CSV — 27 Oktober 2026
+
+Flow sesuai permintaan pengguna: Admin login → menu Report → Export as PDF →
+Export as Excel → Export as CSV. Snapshot TS-027 berasal dari skenario device
+log; flow menu Report yang diminta dicatat pada `requirementOverride` di map.
+Snapshot dan status manual tidak diubah.
+
+Inspeksi `2026-10-27T07-03-44-784Z-1033d7c2` menemukan endpoint GET
+`/api/reports/export?from=<tanggal>&to=<tanggal>&format=pdf|xlsx|csv` pada
+backend staging. Ketiga respons 200, dengan MIME sesuai dan filename
+`energy-report-<from>_to_<to>.<extension>`. Contoh unduhan berukuran sekitar
+6,3 MB PDF, 1,6 MB XLSX, dan 3 MB CSV. CSV berisi header
+`recordedAt,roomName,deviceName,powerWatt,usageKwh` dan log energi rinci.
+Tabel UI berisi ringkasan per device, sehingga jumlah baris UI tidak dijadikan
+acuan jumlah baris log export.
+
+Validasi spec mencakup periode yang sama untuk tiga format, HTTP 200, MIME,
+nama attachment, file baru tidak kosong, header `%PDF-` dan EOF PDF, signature
+ZIP dan komponen XLSX, serta decoding UTF-8 dan header/record pertama CSV.
+Isi lengkap dan layout PDF, cell/header worksheet Excel, serta jumlah/nilai
+seluruh log terhadap sumber data belum dibuktikan.
+
+Run TS-027 staging, build terkonfigurasi `v1.0.5-staging`, role Admin,
+`2026-10-27T07-29-02-381Z-3d25d85b`: **1 Pass, 0 Fail**. Ketiga format
+berhasil diunduh dan seluruh assertion yang disebutkan di atas lulus.
+Run ini dilakukan setelah penyederhanaan: spec berfokus pada alur dan respons,
+`ReportPage.exportFile()` menangani interaksi serta persiapan download,
+dan `reportFile.js` menyediakan fungsi assert PDF, Excel, dan CSV yang terpisah.
+Validasi respons dan file tetap dipertahankan.
+Artifact berada di `reports/runs/2026-10-27T07-29-02-381Z-3d25d85b/cypress-downloads/`:
+
+| Format | File | Ukuran |
+| --- | --- | ---: |
+| PDF | `energy-report-2026-09-27_to_2026-10-27.pdf` | 6.277.360 byte |
+| Excel | `energy-report-2026-09-27_to_2026-10-27.xlsx` | 1.599.880 byte |
+| CSV | `energy-report-2026-09-27_to_2026-10-27.csv` | 3.041.537 byte |
+
+Download disimpan per run pada `reports/runs/<runId>/cypress-downloads`.
+Task persiapan menghapus hanya file format terpilih di folder artifact run
+sebelum export untuk mencegah false Pass dari file lama pada rerun runner.
+Guard membatasi folder ke dalam `reports` project; unit test memeriksa
+preservasi format lain/direktori serta penolakan path di luar reports dan
+ekstensi tidak didukung. Tidak ada dependency baru.
+
+`npm.cmd run check` lulus: 47 file JavaScript valid, 20 unit test lulus,
+15 Test ID dipetakan. Regresi `node scripts/run.mjs demo cypress`, run
+`2026-10-27T07-15-49-502Z-b0ae3d0b`: **8 Pass, 12 Pending, 0 Fail**.
+TS-027 hanya berjalan di staging dan Pending pada demo; hasil demo merupakan
+verifikasi framework setelah perubahan konfigurasi download. Playwright
+tetap ditunda dan tidak dijalankan.
+
 ## FEAT-007 / TS-073 breadcrumb informatif — 27 Oktober 2026
 
 Pengguna mengonfirmasi ketetapan SA dan tim desain: breadcrumb bersifat

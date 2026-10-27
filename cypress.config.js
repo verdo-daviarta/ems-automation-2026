@@ -1,11 +1,13 @@
 import { defineConfig } from 'cypress';
-import { loadEnvironment, readSettings, publicSettings } from './shared/settings.cjs';
+import { root, loadEnvironment, readSettings, publicSettings } from './shared/settings.cjs';
 import { testId, writeSummary } from './shared/reporting.cjs';
+import { prepareReportDownload } from './shared/downloads.cjs';
 
 loadEnvironment();
 const settings = readSettings();
 const rateLimitRunEnabled = process.env.QA_RUN_RATE_LIMIT === '1';
 const rateLimit = settings.contract.rateLimit;
+const downloadsFolder = `reports/runs/${settings.runId}/cypress-downloads`;
 
 function validateRateLimitConfiguration() {
   if (!rateLimitRunEnabled) {
@@ -99,6 +101,7 @@ export default defineConfig({
   video: false,
   screenshotOnRunFailure: true,
   screenshotsFolder: `reports/runs/${settings.runId}/cypress-screenshots`,
+  downloadsFolder,
   reporter: 'junit',
   reporterOptions: {
     mochaFile: `reports/runs/${settings.runId}/cypress-[hash].xml`,
@@ -110,6 +113,10 @@ export default defineConfig({
     supportFile: 'cypress/support/e2e.js',
     testIsolation: true,
     setupNodeEvents(on) {
+      on('task', {
+        prepareReportDownload: (extension) =>
+          prepareReportDownload(root, downloadsFolder, extension)
+      });
       on('before:browser:launch', allowHttpStagingOrigin);
       on('after:run', recordRunSummary);
     }

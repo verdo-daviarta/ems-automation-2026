@@ -126,6 +126,27 @@
       }
     },
     {
+      "testId": "TS-027",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-052-export-report/export-report.cy.js",
+      "requirementOverride": {
+        "confirmedAt": "2026-10-27",
+        "source": "Permintaan pengguna: menu Report sebagai Admin, urutan PDF → Excel → CSV",
+        "expectedResult": "Setiap pilihan export menghasilkan file unduhan baru dengan nama/periode, MIME, ekstensi dan format sesuai pilihan."
+      },
+      "implementedScope": "Admin login dan membuka menu Report, lalu export PDF, Excel (.xlsx), CSV berurutan. Memeriksa HTTP 200, MIME, attachment filename sesuai periode yang sama, file baru tidak kosong, PDF header/EOF, signature ZIP serta komponen XLSX, dan CSV UTF-8 dengan lima header log serta record bertanggal. File lama per format dibersihkan hanya dalam folder artifact run saat ini.",
+      "remainingScope": "PJ, filter khusus, perbandingan seluruh jumlah/nilai log terhadap dataset acuan, cell/header worksheet Excel, isi/tata letak PDF dan encoding seluruh format belum dibuktikan. Snapshot asli TS-027 menyebut device log; flow menu Report mengikuti permintaan pengguna, dan export teramati berisi log energi rinci.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-27T07-29-02-381Z-3d25d85b",
+        "roles": "admin",
+        "scope": "1 Pass, 0 Fail setelah penyederhanaan spec: PDF, Excel, CSV berurutan; tiga HTTP 200, periode/nama/MIME sesuai, dan tiga file baru lolos pemeriksaan format dasar melalui reportFile.js. Artifact tersimpan di cypress-downloads pada run ini. Tidak membuktikan seluruh nilai log, isi PDF atau worksheet Excel; status manual snapshot tidak berubah."
+      }
+    },
+    {
       "testId": "TS-072",
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-002-password/password-visibility.cy.js",
