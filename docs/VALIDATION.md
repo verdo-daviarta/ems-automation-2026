@@ -1,5 +1,79 @@
 # Validasi EMS QA Automation
 
+## FEAT-007 / TS-073 breadcrumb informatif — 27 Oktober 2026
+
+Pengguna mengonfirmasi ketetapan SA dan tim desain: breadcrumb bersifat
+informatif dan tidak menyediakan redirect. Konfirmasi ini menggantikan
+expected result navigasi untuk implementasi TS-073 saat ini. Sumber dan
+tanggal konfirmasi disimpan pada `requirementOverride` di automation map;
+snapshot katalog 9 Oktober serta status manual tidak diubah.
+
+Flow tetap mencari `QA-TS009`, memilih hasil paling atas (index 0), lalu
+membuka detail dengan nama lengkap Room yang terpilih. Untuk label `EMS`,
+`Rooms`, dan nama Room, test memeriksa label terlihat, tidak memiliki href,
+serta tidak berada dalam anchor/button atau elemen role link/button. Setelah
+tiap label diklik, URL lengkap dan heading tetap pada detail Room yang sama.
+Tidak ada fixed wait, penambahan timeout, atau suppression error.
+
+Run staging (build terkonfigurasi `v1.0.5-staging`), Admin/PJ/Komandan,
+`2026-10-27T04-37-01-715Z-3a7ae4a8`: **3 Pass, 0 Fail** sesuai ketentuan
+breadcrumb informatif. `npm.cmd run check` lulus: 42 file JavaScript valid,
+17 unit test lulus. Hasil Fail berikut tetap menjadi riwayat terhadap
+expected result navigasi sebelum konfirmasi baru; tidak direklasifikasi.
+
+## Riwayat FEAT-007 / TS-073 sebelum konfirmasi breadcrumb informatif — 27 Oktober 2026
+
+Kata kunci `roomName` pada spec adalah `QA-TS009`. Helper
+`RoomsPage.searchFirstMatch()` mengisi search bar, menunggu hasil teratas
+(index 0) memiliki nama yang mengandung kata kunci, dan mengambil nama lengkap
+dari `aria-label` tombol View. Spec membuka detail nama tersebut, memeriksa
+heading serta current breadcrumb, lalu melanjutkan klik breadcrumb Rooms
+menuju `/rooms`. Pemilihan mengikuti urutan yang ditampilkan UI, tanpa asumsi
+bahwa index 0 adalah Room terbaru. Pencarian exact-name pada skenario lain
+tetap memakai `RoomsPage.search()`.
+
+Run staging (build terkonfigurasi `v1.0.5-staging`), role Admin/PJ/Komandan,
+`2026-10-27T04-24-08-909Z-44f31fc4`: **0 Pass, 3 Fail**. Ketiganya mencapai
+detail Room hasil teratas dengan nama lengkap sesuai heading dan header.
+Kegagalan berikutnya adalah breadcrumb Rooms tidak mempunyai elemen tautan.
+
+Diagnostik baca-saja Admin `2026-10-27T04-27-29-107Z-f9d5d13a` memilih
+`QA-TS009-admin-1793074383096`. Label Rooms adalah `SPAN` tanpa href, role,
+atau tabindex. Klik label breadcrumb tersebut tetap meninggalkan URL pada
+`/rooms/detail/ca46f5b2-aec5-4d45-ae86-e95c41beaeca`, bukan `/rooms`.
+Jadi penyesuaian pemilihan Room terverifikasi; navigasi breadcrumb belum Pass.
+Tidak ada penggantian aksi menjadi Back to rooms, perubahan data Room,
+atau perubahan status manual snapshot. `npm.cmd run check` lulus:
+42 file JavaScript valid dan 17 unit test lulus.
+
+## FEAT-006 / TS-009 Create → Update description → notifikasi PJ — 27 Oktober 2026
+
+Flow Cypress mengikuti urutan bisnis terbaru: Admin login dan membuat Room
+`QA-TS009-admin-<timestamp>`, mencari namanya, mengklik tombol Edit dengan
+`aria-label="Edit <nama>"`, mengganti description menjadi `TS-009 Updated`,
+lalu Update room. PJ login setelah kedua aksi selesai, membuka notification
+bell → View all, dan memeriksa nama Room beserta `has been created` dan
+`has been updated` pada baris notifikasi yang sama. Frasa aksi dicocokkan
+tanpa membedakan huruf besar/kecil. Skenario Komandan tanpa bell dan link
+notifikasi dipertahankan tanpa perubahan.
+
+Run staging, build terkonfigurasi `v1.0.5-staging`, role Admin → PJ dan Komandan,
+`2026-10-27T04-08-35-672Z-5996c9f5`: **2 Pass, 0 Fail**. Description terisi
+nilai baru sebelum submit, PATCH merespons 200, dan kedua pesan notifikasi
+terlihat setelah PJ membuka View all. Komandan tidak mempunyai fitur notifikasi.
+
+Run awal `2026-10-27T04-06-48-849Z-2f93a04e`: **1 Pass, 1 Fail**. Room
+berhasil dibuat, tetapi helper search menunggu GET `/api/rooms?search=...`
+yang tidak muncul meskipun baris Room sudah terlihat. Helper diubah untuk
+memeriksa nilai input dan menunggu baris dengan nama tepat; tidak ada fixed
+wait, penambahan timeout, atau suppression error. Skenario Komandan sudah
+Pass pada run awal.
+
+Room uji dari run dipertahankan karena fase Delete masih ditunda. Badge,
+Socket.IO real-time, Admin sebagai penerima, dan Delete tidak diuji pada flow
+ini. Snapshot status manual tidak diubah. `npm.cmd run check` lulus:
+42 file JavaScript valid dan 17 unit test lulus.
+
 ## FEAT-024 / TS-017 tambah schedule non-repeat — 22 Oktober 2026
 
 Flow sederhana saat ini: login PJ/Admin → menu Schedule → Add schedule → isi

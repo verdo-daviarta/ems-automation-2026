@@ -49,16 +49,16 @@
       "testId": "TS-009",
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-006-notifications/notification-crud.cy.js",
-      "implementedScope": "Admin Create/Update Room; PJ memeriksa pesan serta badge setelah setiap event. Komandan tidak memiliki fitur notifikasi di dashboard.",
-      "remainingScope": "Admin sebagai penerima menunggu akun aktor lain dengan izin CRU Room; Delete ditunda dan Room uji dipertahankan. Asal badge, push Socket.IO real-time, dan objek CRUD lain belum dibuktikan.",
+      "implementedScope": "Admin membuat Room unik, mencari nama Room, mengedit description menjadi TS-009 Updated dan menyimpan. PJ kemudian login, membuka notification bell dan View all, lalu memeriksa nama Room beserta has been created dan has been updated secara case-insensitive pada baris notifikasi. Skenario Komandan tanpa fitur notifikasi dipertahankan.",
+      "remainingScope": "Admin sebagai penerima menunggu akun aktor lain dengan izin CRU Room; Delete ditunda dan Room uji dipertahankan. Badge, push Socket.IO real-time, dan objek CRUD lain tidak termasuk flow terbaru.",
       "coverage": "starter-subscope",
       "stagingVerification": "Pass",
       "stagingEvidence": {
         "target": "staging",
         "buildId": "v1.0.5-staging",
-        "runId": "2026-10-15T09-25-54-257Z-97d16c99",
+        "runId": "2026-10-27T04-08-35-672Z-5996c9f5",
         "roles": "admin → pj; komandan",
-        "scope": "Subcakupan CRU Admin → PJ Pass: pesan Created dan Updated untuk Room yang sama terlihat setelah tiap event. Komandan tanpa fitur notifikasi Pass. Delete, arah Admin sebagai penerima, dan pembuktian Socket.IO real-time belum dicakup; status manual snapshot tidak berubah."
+        "scope": "2 Pass, 0 Fail: Admin menyelesaikan Create dan Update description sebelum PJ login. PJ membuka bell → View all dan kedua pesan untuk Room yang sama terlihat. Komandan tidak memiliki bell maupun link notifikasi. Pencarian Room menunggu baris sesuai nama; request GET roomSearch tidak muncul pada run awal meskipun hasil UI tersedia. Delete ditunda; status manual snapshot tidak berubah."
       }
     },
     {
@@ -144,15 +144,21 @@
       "testId": "TS-073",
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-007-breadcrumb/breadcrumb.cy.js",
-      "implementedScope": "Setiap role terkonfigurasi membuka detail Room uji Server 2 lalu mengklik breadcrumb Rooms dan memeriksa halaman Rooms.",
-      "remainingScope": "PJ dan Komandan belum mencapai assertion breadcrumb karena login staging tidak stabil. Tautan breadcrumb EMS dan halaman bertingkat modul lain belum dibuktikan; test baca-saja bergantung pada Room uji Server 2 tersedia.",
+      "requirementOverride": {
+        "confirmedAt": "2026-10-27",
+        "source": "Konfirmasi pengguna mengenai ketetapan SA dan tim desain",
+        "expectedResult": "Breadcrumb bersifat informatif tanpa fungsi redirect. Label terlihat, bukan tautan/kontrol navigasi, dan klik tidak mengubah URL halaman detail."
+      },
+      "implementedScope": "Setiap role mencari QA-TS009 dan membuka hasil paling atas (index 0). Label EMS, Rooms dan nama lengkap Room harus terlihat tanpa href maupun ancestor link/button; setelah tiap label diklik, URL lengkap dan heading detail tetap sama. Assertion mengikuti konfirmasi requirement terbaru pengguna.",
+      "remainingScope": "Halaman/modul lain belum dicakup. Test baca-saja memerlukan minimal satu Room QA-TS009 yang terlihat untuk tiap role. Snapshot 9 Oktober masih mencatat expected result navigasi; requirementOverride mencatat konfirmasi baru tanpa mengubah snapshot atau status manual.",
       "coverage": "starter-subscope",
-      "stagingVerification": "Fail",
+      "stagingVerification": "Pass",
       "stagingEvidence": {
         "target": "staging",
         "buildId": "v1.0.5-staging",
-        "runId": "2026-10-16T03-18-58-078Z-99d05c50",
-        "scope": "Admin mencapai detail Server 2; label Rooms di header adalah span, bukan tautan, sehingga navigasi breadcrumb gagal. PJ mendapat halaman System Experiencing Issues dan Komandan tetap di /login sebelum mencapai breadcrumb. Run diagnostik 2026-10-16T03-21-55-711Z-46622bf2 tertahan login untuk semua role. Status manual snapshot tidak berubah."
+        "runId": "2026-10-27T04-37-01-715Z-3a7ae4a8",
+        "roles": "admin,pj,komandan",
+        "scope": "3 Pass, 0 Fail sesuai requirement baru breadcrumb informatif. Admin/PJ/Komandan membuka Room hasil index 0 dan memeriksa EMS, Rooms serta nama Room: terlihat, tanpa href/kontrol navigasi, klik mempertahankan URL dan heading detail. Hasil Fail sebelumnya tetap tercatat untuk expected result lama. Status manual snapshot tidak berubah."
       }
     },
     {

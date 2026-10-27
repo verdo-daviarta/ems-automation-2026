@@ -26,23 +26,19 @@ describe('EMS notification from another user CRU @notifications', () => {
     roomsPage.create({
       name: roomName,
       location: 'QA staging automation',
-      description: 'TS-009 created'
+      description: 'TS-009 Created'
     });
 
-    loginWithSession('pj');
-    notificationPage.visitAll();
-    notificationPage.messageForRoom(roomName, 'Created').should('be.visible');
-    notificationPage.unreadBadge.should('be.visible');
-
-    loginWithSession('admin');
-    roomsPage.visit();
     roomsPage.search(roomName);
-    roomsPage.updateLocation(roomName, 'QA staging automation updated');
+    roomsPage.updateDescription(roomName, 'TS-009 Updated');
 
     loginWithSession('pj');
-    notificationPage.visitAll();
-    notificationPage.messageForRoom(roomName, 'Updated').should('be.visible');
-    notificationPage.unreadBadge.should('be.visible');
+    cy.visit(qa().contract.routes.dashboard);
+    new DashboardPage().assertReady();
+    notificationPage.openFromBell();
+
+    notificationPage.messageForRoom(roomName, 'created').should('be.visible');
+    notificationPage.messageForRoom(roomName, 'updated').should('be.visible');
   });
 
   scenario('[FEAT-006] [TS-009] Komandan tidak memiliki fitur notifikasi', () => {

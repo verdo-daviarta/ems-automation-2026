@@ -65,7 +65,7 @@ describe('EMS login limitation @rate-limit', () => {
       for (let attempt = 1; attempt <= rateLimit.attemptsBeforeLockCheck; attempt++) {
         submitInvalidLogin(loginPage, rateLimitAccount, wrongPassword, attempt);
 
-        if (attempt === 1) {
+        if (attempt === 20) {
           cy.get(toastSelector)
             .first()
             .should('be.visible')

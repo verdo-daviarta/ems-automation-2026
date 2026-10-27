@@ -7,8 +7,11 @@ export class NotificationPage {
   }
 
   messageForRoom(roomName, action) {
-    const subject = action === 'Updated' ? `Room Name "${roomName}"` : `Room "${roomName}"`;
-    return cy.contains('table tbody tr', subject).should('contain.text', `has been ${action}`);
+    const messagePattern = new RegExp(`\\bhas been ${action}\\b`, 'i');
+    return cy.get('table tbody tr').filter((_, row) => {
+      const text = row.innerText;
+      return text.includes(`"${roomName}"`) && messagePattern.test(text);
+    });
   }
 
   openFromBell() {

@@ -118,9 +118,12 @@ Dalam run headless tanpa flag tersebut, TS-004 dilaporkan Not Run. Test mengirim
 
 Pada build staging `v1.0.5-staging`, assertion toast bertanggal terbaru masih **Fail**; lihat `docs/VALIDATION.md` untuk hasil dan pesan aktual.
 
-TS-009 memakai Cypress untuk memicu Create dan Update pada Room uji unik.
-Setelah setiap event, PJ login dan memeriksa notifikasi dari Admin. Komandan
-diperiksa tidak mempunyai fitur notifikasi. Admin sebagai penerima belum dapat
+TS-009 memakai Cypress untuk Admin membuat Room uji unik, mencari nama Room,
+lalu mengedit description menjadi `TS-009 Updated` melalui tombol Edit.
+Setelah Create dan Update selesai, PJ login dan membuka notification bell →
+`View all`. Test mencari notifikasi berdasarkan nama Room dan frasa
+`has been created` serta `has been updated`, tanpa membedakan huruf besar/kecil.
+Komandan diperiksa tidak mempunyai fitur notifikasi. Admin sebagai penerima belum dapat
 diuji karena akun PJ dan Komandan tidak memiliki izin Add room; dibutuhkan
 aktor lain yang memiliki izin CRU Room.
 Delete ditunda. Room hasil run dipertahankan dengan awalan `QA-TS009-` agar bisa
@@ -130,9 +133,9 @@ dipakai pada fase Delete; catat namanya dari log Cypress setelah menjalankan spe
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-006-notifications/notification-crud.cy.js
 ```
 
-Run staging terbaru **Pass** untuk subcakupan Admin → PJ: PJ melihat pesan
-`Created` dan `Updated` untuk Room uji yang sama. Format pesan `Updated` di UI
-diawali `Room Name`, sedangkan `Created` diawali `Room`. Lihat
+Run staging terbaru **Pass** untuk subcakupan Admin → PJ dan Komandan:
+kedua pesan diperiksa dalam satu kunjungan PJ setelah Create/Update Admin.
+Assertion mencocokkan nama Room dan frasa aksi pada baris notifikasi yang sama. Lihat
 `docs/VALIDATION.md` untuk bukti run dan batas cakupan. Test belum mencakup
 pembaruan Socket.IO secara real-time atau pembuktian bahwa badge baru berasal
 dari event test ini.
@@ -183,17 +186,22 @@ perangkat pada waktu jadwal tidak diuji.
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js
 ```
 
-TS-073 menguji breadcrumb `Rooms` dari detail Room uji `Server 2` untuk setiap
-role staging. Test ini baca-saja dan memerlukan Room tersebut tetap tersedia:
+TS-073 mencari Room dengan kata kunci `QA-TS009` untuk setiap role staging,
+memilih hasil paling atas (index 0), lalu membuka detail dan memvalidasi
+breadcrumb informatif sesuai konfirmasi SA/desain yang disampaikan pengguna
+pada 27 Oktober 2026. Label `EMS`, `Rooms`, dan nama lengkap Room harus terlihat
+tanpa tautan/kontrol navigasi; klik setiap label mempertahankan URL dan heading
+detail. Test ini baca-saja dan memerlukan minimal satu Room yang cocok:
 
 ```powershell
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-007-breadcrumb/breadcrumb.cy.js
 ```
 
-Pada build staging `v1.0.5-staging`, Admin mencapai detail Room tetapi label
-`Rooms` di breadcrumb berupa teks biasa, sehingga navigasi breadcrumb **Fail**.
-PJ dan Komandan belum mencapai assertion breadcrumb karena login staging tidak
-stabil. Lihat `docs/VALIDATION.md` untuk bukti dan batas cakupan.
+Pada run staging 27 Oktober 2026 (build terkonfigurasi `v1.0.5-staging`),
+Admin/PJ/Komandan **Pass** untuk breadcrumb informatif (3 Pass, 0 Fail).
+Perubahan expected result dicatat pada `requirementOverride` di automation map;
+snapshot katalog dan status manual dipertahankan. Lihat `docs/VALIDATION.md`
+untuk bukti run terbaru serta riwayat assertion navigasi sebelumnya.
 
 TS-025 membuat satu Room melalui UI Admin dengan nama unik
 `QA-TS025-admin-<timestamp>` pada tiap run, mengikuti pola TS-009. Nama aktual

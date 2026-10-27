@@ -13,11 +13,19 @@ export class RoomsPage {
   }
 
   search(name) {
-    cy.intercept({ method: 'GET', pathname: '/api/rooms', query: { search: name } }).as(
-      'roomSearch'
-    );
-    cy.get(searchSelector).clear().type(name);
-    return cy.wait('@roomSearch').its('response.statusCode').should('eq', 200);
+    cy.get(searchSelector).clear().type(name).should('have.value', name);
+    return this.roomRow(name).should('be.visible');
+  }
+
+  searchFirstMatch(keyword) {
+    cy.get(searchSelector).clear().type(keyword).should('have.value', keyword);
+    return cy
+      .get('table tbody tr')
+      .first()
+      .find('button[aria-label^="View "]')
+      .should('have.attr', 'aria-label')
+      .and('include', keyword)
+      .then((label) => label.slice('View '.length));
   }
 
   roomRow(name) {
@@ -56,5 +64,17 @@ export class RoomsPage {
     cy.wait('@roomUpdate').its('response.statusCode').should('eq', 200);
     cy.get('[role="dialog"]').should('not.exist');
     return this.roomRow(name).should('contain.text', location);
+  }
+
+  updateDescription(name, description) {
+    cy.intercept('PATCH', '**/api/rooms/*').as('roomUpdate');
+    this.roomRow(name).find(`button[aria-label="Edit ${name}"]`).click();
+    cy.get('[role="dialog"]').within(() => {
+      cy.get(descriptionSelector).clear().type(description).should('have.value', description);
+      cy.contains('button', 'Update room').click();
+    });
+
+    cy.wait('@roomUpdate').its('response.statusCode').should('eq', 200);
+    return cy.get('[role="dialog"]').should('not.exist');
   }
 }
