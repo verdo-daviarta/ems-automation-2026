@@ -1,5 +1,104 @@
 # Validasi EMS QA Automation
 
+## FEAT-018 / TS-014 informasi Current, Peak, Avg — 28 Oktober 2026
+
+Flow mengikuti `stepsSummary` dan expected result katalog terbaru: Admin dan PJ
+login melalui UI, mengakses menu Dashboard, lalu memeriksa informasi Current,
+Peak, dan Average/Avg. Staging menampilkan label `Avg` pada kartu Energy usage
+timeline. Spec `cypress/e2e/FEAT-018-energy-metrics/energy-metrics.cy.js` memakai
+locator `DashboardPage.energyTimelineMetric()` yang dibatasi pada kartu tersebut;
+assertion visibilitas label tetap di spec.
+
+Run staging, build terkonfigurasi `v1.0.5-staging`, role Admin/PJ,
+`2026-10-28T08-50-26-555Z-5bf27d0b`: **2 Pass, 0 Fail**. Syntax **50/50 valid**,
+file terkait TS-014 lolos Prettier, dan diff tanpa whitespace error.
+`npm run check` masih terhenti pada formatting file export Report yang sudah
+bermasalah sebelum perubahan ini.
+
+Cakupan adalah keberadaan label UI. Nilai/unit, perhitungan terhadap known series,
+perubahan periode, empty state, dan Komandan belum diperiksa. Tidak ada dependency,
+fixed wait, mock, atau data uji baru. Playwright tidak dijalankan. Snapshot katalog
+dan status manual tidak diubah oleh implementasi ini.
+
+## FEAT-016 / TS-013 grafik dan filter Energy usage timeline — 28 Oktober 2026
+
+Flow mengikuti `stepsSummary`: login Admin/PJ/Komandan, akses menu Dashboard,
+periksa grafik, ubah periode, lalu periksa titik grafik. Goal implementasi adalah
+keberadaan grafik dan filter pada kartu Energy usage timeline. Spec berada di
+`cypress/e2e/FEAT-016-energy-timeline/energy-timeline.cy.js`; locator dan interaksi
+menggunakan `DashboardPage` yang sudah ada.
+
+Today diperiksa sebagai periode default yang aktif. Test kemudian memilih
+Last week, Last month, Last year, dan kembali ke Today. Setiap pilihan memeriksa
+tombol filter menjadi disabled sesuai state aktif UI, SVG terlihat, path kurva
+tidak kosong, dan setidaknya satu titik data tersedia. Assertion Cypress menunggu
+render/animasi grafik tanpa fixed wait, mock, atau seed telemetry. Getter mengambil
+DOM baru pada tiap langkah agar tidak menggunakan kartu lama setelah render ulang.
+
+Run final staging, build terkonfigurasi `v1.0.5-staging`, role Admin/PJ/Komandan,
+`2026-10-28T08-30-34-576Z-cb8c0ff6`: **3 Pass, 0 Fail**. Bukti JUnit dan
+`cypress.json` tersimpan dalam folder run. Pengujian awal sebelum penambahan klik
+menu Dashboard juga **3 Pass, 0 Fail** pada `2026-10-28T08-28-31-729Z-2a36a21e`.
+
+Pemeriksaan kode: syntax **49/49 valid**, unit test **20 Pass**, dan file terkait
+TS-013 lolos Prettier. `npm run check` masih berhenti pada formatting file export
+Report yang sudah berubah sebelumnya. `coverage:catalog` juga masih gagal karena
+map TS-027 menunjuk folder export lama yang sudah dipindahkan pengguna.
+Perubahan export dan snapshot skenario dipertahankan.
+
+Cakupan ini belum memvalidasi nilai/jumlah titik terhadap data acuan, ketepatan
+label/range, perubahan dataset akibat filter, timezone/boundary, empty state, atau
+API. Test memerlukan data timeline staging pada keempat periode. Tidak ada
+Playwright yang dijalankan dan status manual snapshot tidak diubah.
+
+## FEAT-013 / TS-012 ringkasan energi dashboard — 28 Oktober 2026
+
+Flow mengikuti `stepsSummary` UI terbaru pada katalog yang telah diubah pengguna:
+Admin dan PJ login melalui UI, membuka dashboard, lalu memeriksa kartu Energy usage,
+nilai penggunaan dengan unit kWh, serta teks perbandingan `from yesterday`.
+Spec: `cypress/e2e/FEAT-013-energy-summary/energy-summary.cy.js`.
+Locator dan sinkronisasi berada pada `DashboardPage`; assertion bisnis tetap di spec.
+
+Source publik dashboard menunjukkan data awal bernilai 0 sebelum summary Socket.IO
+diterima. Test mengamati payload summary melalui HTTP polling atau WebSocket sebelum
+memeriksa kartu. Pengamatan tidak mengubah request, response, atau isi message dan
+tidak merekam token/credential. Tidak ada mock, seed, atau fixed wait.
+
+Penyesuaian terbaru mengikuti permintaan pengguna: nilai kWh cukup terlihat dan
+tidak kosong, berapapun nilainya. Tidak memvalidasi besar maupun format angka.
+Assertion keliru yang mencari `from yesterday` pada elemen nilai kWh diganti
+dengan pemeriksaan teks tidak kosong. Pemeriksaan `from yesterday` pada elemen
+perbandingan yang sudah diubah pengguna sebelumnya dipertahankan.
+
+Run terbaru staging, build terkonfigurasi `v1.0.5-staging`, role Admin dan PJ,
+`2026-10-28T07-42-55-755Z-47e98482`: **2 Pass, 0 Fail**. Syntax **48/48 valid**.
+`npm run check` masih berhenti pada formatting file export Report yang sudah
+bermasalah sebelumnya. Pass ini tidak membuktikan perbaikan tampilan `+-`;
+format persentase tidak diperiksa oleh assertion teks saat ini.
+
+Run sebelum penyesuaian, build terkonfigurasi `v1.0.5-staging`, role Admin dan PJ,
+`2026-10-28T07-27-10-442Z-62b22383`: **0 Pass, 2 Fail**. Login, dashboard,
+summary, kartu, unit, dan format angka kWh berhasil diperiksa untuk kedua role.
+Keduanya gagal pada teks `+-39.3% from yesterday`: persentase memiliki dua tanda
+yang bertentangan. Source frontend menambahkan `+` secara tetap sebelum nilai
+`changePercentFromYesterday`, sehingga nilai negatif menghasilkan `+-`.
+Assertion pada run tersebut mengizinkan satu tanda positif/negatif atau tanpa tanda; expected result
+tidak dilonggarkan untuk menerima tampilan tersebut. Bukti screenshot dan JUnit
+tersimpan dalam folder run. Run awal spec juga gagal pada kondisi yang sama.
+
+Pemeriksaan kode: syntax **48/48 valid**, unit test **20 Pass**. Format file yang
+ditambahkan/diubah untuk TS-012 lolos Prettier. `npm run check` belum lulus karena
+formatting file export Report yang telah berubah sebelum pekerjaan TS-012.
+Pemeriksaan katalog terpisah juga gagal karena map TS-027 masih menunjuk
+`cypress/e2e/FEAT-052-export-report/export-report.cy.js`, sedangkan pengguna telah
+memindahkan spec ke folder FEAT-096-098 dan mengganti judulnya menjadi TS-067–TS-069.
+Perubahan export tersebut dipertahankan dan tidak diperbaiki dalam scope TS-012.
+
+Cakupan belum membuktikan perhitungan energi/persentase terhadap dataset acuan,
+akurasi telemetry, Komandan, atau variasi nilai yang disiapkan secara deterministik.
+Snapshot skenario dan status manual tidak diubah oleh implementasi ini. Playwright
+tidak dijalankan.
+
 ## FEAT-052 / TS-027 export Report PDF, Excel, CSV — 27 Oktober 2026
 
 Flow sesuai permintaan pengguna: Admin login → menu Report → Export as PDF →

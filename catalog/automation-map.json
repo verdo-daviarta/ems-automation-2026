@@ -93,6 +93,59 @@
       }
     },
     {
+      "testId": "TS-012",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-013-energy-summary/energy-summary.cy.js",
+      "implementedScope": "Admin dan PJ login melalui UI, membuka dashboard, menunggu summary energi Socket.IO, lalu memeriksa kartu Energy usage, nilai yang terlihat dan tidak kosong, serta unit kWh. Besar dan format nilai tidak divalidasi sesuai permintaan pengguna. Pemeriksaan teks perbandingan from yesterday yang sudah ada dipertahankan.",
+      "requirementOverride": {
+        "confirmedAt": "2026-10-28",
+        "source": "Permintaan pengguna: nilai kWh cukup tampil berapapun nilainya",
+        "expectedResult": "Nilai Energy usage terlihat, tidak kosong, dan memiliki unit kWh; tidak membandingkan besar nilai atau memeriksa format angkanya."
+      },
+      "remainingScope": "Komandan, besar/format nilai kWh, format/persentase perbandingan, perhitungan terhadap dataset acuan, akurasi sumber telemetry, dan variasi nilai positif/nol/negatif secara deterministik belum dicakup. Tampilan +- pada perbandingan tidak dideteksi oleh assertion teks saat ini. Tidak membuat seed atau mock data; pengamatan Socket.IO hanya untuk sinkronisasi selesai loading.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-28T07-42-55-755Z-47e98482",
+        "roles": "admin,pj",
+        "scope": "2 Pass, 0 Fail: nilai Energy usage terlihat dan tidak kosong, unit kWh terlihat, serta teks from yesterday tersedia setelah summary diterima. Tidak memvalidasi besar/format angka kWh atau format persentase. Assertion perbandingan yang sudah diubah pengguna sebelum penyesuaian ini dipertahankan; Pass tidak membuktikan perbaikan tampilan +- yang ditemukan sebelumnya. Status manual snapshot tidak diubah."
+      }
+    },
+    {
+      "testId": "TS-013",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-016-energy-timeline/energy-timeline.cy.js",
+      "implementedScope": "Admin, PJ, dan Komandan login melalui UI lalu membuka dashboard. Memeriksa kartu Energy usage timeline dan grafik, Today aktif secara default, kemudian memilih Last week, Last month, Last year, dan Today. Setiap pilihan memeriksa filter menjadi aktif (disabled), SVG grafik terlihat, kurva memiliki path, dan titik data tersedia.",
+      "remainingScope": "Nilai/jumlah titik, ketepatan range dan label sumbu terhadap data acuan, perubahan dataset akibat filter, timezone/boundary, empty state, serta kontrak API belum dicakup. Memerlukan data timeline staging untuk keempat periode; tidak menggunakan mock atau membuat data telemetry.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-28T08-30-34-576Z-cb8c0ff6",
+        "roles": "admin,pj,komandan",
+        "scope": "3 Pass, 0 Fail: ketiga role login, klik menu Dashboard, memeriksa Today default aktif dan grafik, lalu memilih Last week, Last month, Last year, Today. Semua pilihan menampilkan filter aktif, SVG, kurva dan titik data. Tidak membandingkan nilai/jumlah titik atau ketepatan rentang terhadap data acuan. Status manual snapshot tidak diubah."
+      }
+    },
+    {
+      "testId": "TS-014",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-018-energy-metrics/energy-metrics.cy.js",
+      "implementedScope": "Admin dan PJ login melalui UI, mengakses menu Dashboard, lalu memeriksa kartu Energy usage timeline serta label Current, Peak, dan Avg terlihat. Mengikuti stepsSummary dan expectedResult UI pada katalog terbaru.",
+      "remainingScope": "Komandan, nilai/unit setiap metrik, akurasi perhitungan current/peak/average terhadap known series, perubahan periode, dan empty state belum dicakup. UI staging menggunakan label Avg untuk average.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-28T08-50-26-555Z-5bf27d0b",
+        "roles": "admin,pj",
+        "scope": "2 Pass, 0 Fail: kedua role login, klik menu Dashboard, lalu melihat kartu Energy usage timeline dan label Current, Peak, Avg. Pass hanya membuktikan keberadaan label sesuai expectedResult UI; tidak membuktikan perhitungan metrik. Status manual snapshot tidak diubah."
+      }
+    },
+    {
       "testId": "TS-017",
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js",

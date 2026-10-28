@@ -17,7 +17,7 @@ describe('EMS Report exports @reports', () => {
   const { target, roles } = qa();
   const scenario = target === 'staging' ? it : it.skip;
 
-  scenario('[FEAT-052] [TS-027] Admin export Report ke PDF, Excel, dan CSV', () => {
+  scenario('[FEAT-096 - FEAT-098] [TS-067 - TS-069] Admin export Report ke PDF, Excel, dan CSV', () => {
     expect(roles).to.include('admin');
     const reportPage = new ReportPage();
     let reportPeriod;

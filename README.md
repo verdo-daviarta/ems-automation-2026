@@ -2,7 +2,7 @@
 
 Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
-Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **15 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
+Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **18 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
 
 ## Mulai di VS Code lokal
 
@@ -235,6 +235,35 @@ npm.cmd run cy:run -- --spec cypress/e2e/FEAT-052-export-report/export-report.cy
 `test:staging` selalu memilih staging, meskipun `.env` masih menyebut demo. Bila konfigurasi tidak lengkap, perintah gagal dengan pesan yang jelas; tidak fallback ke demo. `cy:open`, `cy:run`, `pw:run`, dan `pw:ui` mengikuti `QA_TARGET` pada `.env`.
 
 Untuk Cypress UI di Windows, gunakan `npm run cy:open`. Script ini membersihkan `ELECTRON_RUN_AS_NODE` dari proses Cypress. Jika menjalankan `npx cypress open` langsung dari PowerShell dan variabel itu bernilai `1`, hapus dari terminal tersebut terlebih dahulu dengan `Remove-Item Env:ELECTRON_RUN_AS_NODE`. Konfigurasi Cypress juga memasukkan host staging HTTP ke allowlist Chrome agar runner tidak terus dialihkan ke HTTPS dan memuat ulang.
+
+TS-012 / FEAT-013 mengikuti `stepsSummary` UI: Admin/PJ login, membuka dashboard,
+memeriksa kartu Energy usage, nilai yang terlihat dan tidak kosong dengan unit kWh,
+serta teks perbandingan `from yesterday`. Test menunggu summary Socket.IO agar tidak
+memvalidasi angka awal saat loading. Besar dan format nilai kWh tidak diperiksa;
+nilai belum dibandingkan dengan dataset telemetry acuan.
+
+```powershell
+npm run cy:run -- --spec cypress/e2e/FEAT-013-energy-summary/energy-summary.cy.js
+```
+
+TS-013 / FEAT-016 mengikuti langkah login Admin/PJ/Komandan dan membuka dashboard.
+Pada kartu Energy usage timeline, test memeriksa grafik, memilih Last week,
+Last month, Last year, lalu kembali ke Today. Setiap pilihan memeriksa filter aktif,
+grafik terlihat, kurva, dan keberadaan titik data tanpa membandingkan nilai/jumlah
+titik dengan dataset acuan. Test memerlukan data pada keempat periode.
+
+```powershell
+npm run cy:run -- --spec cypress/e2e/FEAT-016-energy-timeline/energy-timeline.cy.js
+```
+
+TS-014 / FEAT-018 mengikuti `stepsSummary` dan expected result UI di katalog:
+Admin/PJ login, mengakses menu Dashboard, lalu memeriksa informasi Current, Peak,
+dan Avg pada kartu Energy usage timeline. Cakupan berupa label yang terlihat;
+nilai/unit dan akurasi perhitungan metrik belum divalidasi.
+
+```powershell
+npm run cy:run -- --spec cypress/e2e/FEAT-018-energy-metrics/energy-metrics.cy.js
+```
 
 ## Menjalankan dan memeriksa hasil
 
