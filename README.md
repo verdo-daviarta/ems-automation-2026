@@ -2,7 +2,7 @@
 
 Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
-Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **19 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
+Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **20 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
 
 ## Mulai di VS Code lokal
 
@@ -35,7 +35,7 @@ Mulai pengembangan UI sehari-hari dari Cypress. Bila belum familiar dengan Playw
 
 ## Menghubungkan ke EMS staging
 
-Target staging saat ini adalah `http://ems.10.70.0.45.nip.io/`, dengan release `v1.0.5-staging` yang diberikan pengguna. Route dan selector authentication pada `config/staging.json` sudah direview berdasarkan DOM dan source JavaScript yang disajikan aplikasi. Kontrak API masih disabled.
+Target staging saat ini adalah `http://192.168.101.138:6004`, sesuai perubahan URL pada 29 Oktober 2026. Build yang masih terkonfigurasi adalah `v1.0.5-staging`; versi pada server baru belum diverifikasi. Cypress dan Playwright mengambil URL dari `.env` yang sama. Route dan selector authentication pada `config/staging.json` berasal dari inspeksi target sebelumnya. Kontrak API masih disabled.
 
 Login memakai Cloudflare Turnstile: tombol Sign In baru aktif setelah token tersedia. Setelah tim FE memasang test sitekey, TS-001 berhasil untuk admin, pj, dan komandan, serta TS-002 berhasil; TS-006 masih gagal dengan `NEXT_REDIRECT` dari aplikasi. Tidak ada bypass atau mock CAPTCHA di automation. Detail hasil dan batas verifikasi ada di `docs/VALIDATION.md` dan laporan run staging.
 
@@ -43,7 +43,7 @@ Login memakai Cloudflare Turnstile: tombol Sign In baru aktif setelah token ters
 
 ```dotenv
 QA_TARGET=staging
-QA_BASE_URL=http://ems.10.70.0.45.nip.io/
+QA_BASE_URL=http://192.168.101.138:6004
 QA_API_BASE_URL=
 QA_BUILD_ID=v1.0.5-staging
 QA_ROLES=admin,pj,komandan
@@ -60,6 +60,11 @@ QA_PLAYWRIGHT_CHANNEL=chrome
 Ganti nilai contoh credential dengan akun QA sebenarnya. `QA_<ROLE>_ID` adalah identitas login (username/email sesuai aplikasi), dengan alias `_USERNAME` lalu `_EMAIL` sebagai fallback. Properti internal `credentials.email` dan `selectors.email` dipertahankan untuk kompatibilitas; bukan pembatasan bahwa ID wajib berformat email. Demo tetap menggunakan role fiktif `admin,pj,user`; staging dikonfigurasi `admin,pj,komandan`. Role `user` masih diterima untuk kompatibilitas, tetapi belum dibuktikan sebagai role deployment ini. Metadata roles mencatat konfigurasi, bukan bukti semua role telah diuji.
 
 Jika frontend dan API satu base URL, `QA_API_BASE_URL` boleh kosong. API test tetap Not Run selama kontrak disabled.
+
+Setelah mengganti URL pada `.env`, tutup seluruh jendela Cypress project ini lalu
+buka kembali dengan `npm run cy:open`. Runner yang sudah terbuka menyimpan
+konfigurasi saat startup; menjalankan ulang spec saja tidak memuat ulang `.env`.
+Terminal menampilkan `Base URL` dan `[Cypress] Origin` untuk memeriksa target aktif.
 
 2. Tinjau kembali `config/staging.json` bila aplikasi/build berubah:
 
@@ -189,6 +194,17 @@ schedule Turn ON dihapus setelah verifikasi.
 
 ```powershell
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js
+```
+
+TS-020 / FEAT-029 menyiapkan schedule milik test melalui flow TS-017 untuk Admin/PJ,
+lalu membuka Upcoming dan mengedit hanya description serta start time. Description
+baru `TS-020 Updated`; waktu baru +2 jam WIB dari awal test. Test memeriksa ID tetap,
+payload field lain tetap sama, dan nilai tersimpan setelah reload, lalu cleanup.
+Setup ini diperlukan karena TS-017 menghapus datanya setelah verifikasi, sehingga
+TS-020 tetap dapat dijalankan sendiri. Eksekusi scheduler/double-run belum diuji.
+
+```powershell
+npm run cy:run -- --spec cypress/e2e/FEAT-029-edit-schedule/edit-schedule.cy.js
 ```
 
 TS-073 mencari Room dengan kata kunci `QA-TS009` untuk setiap role staging,

@@ -1,5 +1,5 @@
-export function getScheduleStartTime(testStartedAt) {
-  const startsAt = new Date(testStartedAt + 60 * 60 * 1000);
+export function getScheduleStartTime(testStartedAt, minutesFromStart = 60) {
+  const startsAt = new Date(testStartedAt + minutesFromStart * 60 * 1000);
   const [date, time] = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'Asia/Jakarta',
     year: 'numeric',
@@ -14,7 +14,9 @@ export function getScheduleStartTime(testStartedAt) {
 
   // Form memakai tanggal UTC hari ini dan tidak menyediakan pemilih tanggal.
   if (date !== new Date(testStartedAt).toISOString().slice(0, 10)) {
-    throw new Error('Start time +1 jam memerlukan tanggal lain yang belum dapat dipilih di form.');
+    throw new Error(
+      `Start time +${minutesFromStart} menit memerlukan tanggal lain yang belum dapat dipilih di form.`
+    );
   }
   return time;
 }

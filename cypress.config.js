@@ -112,7 +112,8 @@ export default defineConfig({
     specPattern: 'cypress/e2e/**/*.cy.js',
     supportFile: 'cypress/support/e2e.js',
     testIsolation: true,
-    setupNodeEvents(on) {
+    setupNodeEvents(on, config) {
+      console.log(`[Cypress] Origin: ${new URL(config.baseUrl).origin}`);
       on('task', {
         prepareReportDownload: (extension) =>
           prepareReportDownload(root, downloadsFolder, extension)

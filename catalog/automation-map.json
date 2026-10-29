@@ -184,6 +184,22 @@
       }
     },
     {
+      "testId": "TS-020",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-029-edit-schedule/edit-schedule.cy.js",
+      "implementedScope": "Admin dan PJ menyiapkan schedule milik test dengan flow TS-017 pada Room SD 2, membuka Upcoming, lalu mengedit hanya description menjadi TS-020 Updated dan startTime menjadi +2 jam WIB dari awal test. Memeriksa PUT pada ID hasil create, payload hanya berbeda pada dua field tersebut, respons update, serta satu baris dan nilai form setelah reload. Cleanup menghapus schedule milik test.",
+      "remainingScope": "Schedule aktif, eksekusi perangkat, dan pembuktian tidak double-run oleh scheduler belum diuji. Satu baris dan ID tetap hanya membuktikan konsistensi record, bukan jumlah eksekusi. Room fixture harus tersedia; guard tanggal form berlaku pada waktu create +1 jam dan edit +2 jam. Tidak memakai record bisnis bersama atau bergantung pada urutan eksekusi spec TS-017.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-29T06-55-07-590Z-8d5ddb60",
+        "roles": "admin,pj",
+        "scope": "2 Pass, 0 Fail: kedua role membuat prasyarat TS-017 sendiri, mengedit schedule Upcoming dengan description baru dan startTime +2 jam, PUT 200 pada ID semula, payload field lain tetap sama, nilai respons dan form setelah reload sesuai, serta hasil pencarian hanya satu baris. Hook cleanup berhasil menghapus schedule uji kedua role. Tidak menunggu eksekusi perangkat atau membuktikan tidak double-run oleh scheduler. Status manual snapshot tidak diubah."
+      }
+    },
+    {
       "testId": "TS-025",
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-045-create-room/create-room.cy.js",

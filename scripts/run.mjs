@@ -84,6 +84,7 @@ try {
   console.log(
     `Target: ${settings.target.toUpperCase()} | Build: ${settings.buildId} | Roles: ${settings.roles.join(',')}`
   );
+  console.log(`Base URL: ${settings.baseURL}`);
   console.log(`Run: ${settings.runId}`);
   let code = 0;
   if (engine === 'all' || engine.startsWith('cypress')) {

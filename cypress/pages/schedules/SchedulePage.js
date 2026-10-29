@@ -33,6 +33,34 @@ export class SchedulePage {
     return cy.get('[role="dialog"]').should('be.visible');
   }
 
+  openEditForm(name) {
+    this.scheduleRow(name).find('button[aria-label^="Edit schedule"]').click();
+    return this.dialog.contains('h2', /^Edit schedule$/).should('be.visible');
+  }
+
+  updateDetails({ description, startTime }) {
+    this.descriptionInput.clear().type(description).should('have.value', description);
+    return this.startTimeInput.clear().type(startTime).should('have.value', startTime);
+  }
+
+  saveChanges() {
+    cy.intercept({ method: 'PUT', pathname: '/api/schedules/*' }).as('updateSchedule');
+    this.dialog.contains('button', /^Update schedule$/).click();
+    return cy.wait('@updateSchedule');
+  }
+
+  closeForm() {
+    return this.dialog.find('button[aria-label="Close"]').click();
+  }
+
+  get descriptionInput() {
+    return this.form.find('textarea[name="description"]');
+  }
+
+  get startTimeInput() {
+    return this.form.find('input[name="startTime"]');
+  }
+
   fillForm({ name, description, roomName, action, startTime }) {
     this.form.find('input[name="name"]').type(name);
     this.form.find('textarea[name="description"]').type(description);

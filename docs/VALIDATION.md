@@ -1,5 +1,93 @@
 # Validasi EMS QA Automation
 
+## Runner Cypress masih memakai URL lama — 29 Oktober 2026
+
+Runner EMS yang masih terbuka dibuat pukul 10:23 WIB, sedangkan `.env` diubah
+pukul 14:11 WIB. Konfigurasi jendela lama belum dimuat ulang. Runner project EMS
+tersebut ditutup secara normal, lalu dibuka ulang dengan `scripts/run.mjs configured
+cypress-open`. Tidak ada perubahan prioritas credential/environment dan tidak ada
+URL yang di-hardcode pada spec produksi.
+
+Launcher sekarang mencetak `Base URL`, dan setup Cypress mencetak origin dari
+config final. Runner interaktif baru `2026-10-29T08-12-49-818Z-4a628bd2`
+menampilkan keduanya sebagai `http://192.168.101.138:6004`. Log startup berada di
+`reports/diagnostics/cypress-open-current-url.stdout.log`. Setelah mengubah `.env`,
+runner harus ditutup dan dibuka ulang; rerun spec saja tidak memuat ulang file ini.
+
+Verifikasi browser Chrome `2026-10-29T07-56-15-027Z-bbe25c2a`: **1 Pass, 0 Fail**.
+Probe memeriksa baseUrl final, membuka `/login`, memeriksa origin aktual browser
+adalah IP/port baru, serta field username/password terlihat. Tidak mengirim login
+atau melakukan CRUD. Spec diagnostik dihapus setelah verifikasi.
+
+Verifikasi framework khusus Cypress demo `2026-10-29T08-02-05-030Z-3f396803`:
+**8 Pass, 24 Pending, 0 Fail**. Pending adalah skenario staging/opt-in; hasil ini
+hanya bukti framework. Playwright tidak dijalankan. Syntax **54/54 valid**, file
+konfigurasi terkait lolos Prettier, dan `npm run check` masih terhenti pada
+formatting spec export Report yang sudah bermasalah sebelumnya.
+
+## Perubahan URL staging — 29 Oktober 2026
+
+Target aktif sekarang `http://192.168.101.138:6004`, sesuai instruksi pengguna.
+`.env` sudah berisi URL baru; `.env.example` dan contoh README diselaraskan.
+Cypress dan Playwright mengambil base URL dari shared settings. `QA_API_BASE_URL`
+kosong sehingga konfigurasi API mengikuti base URL baru; kontrak API masih disabled.
+Hostname API yang digunakan oleh aplikasi frontend sendiri bergantung pada build
+aplikasi, bukan variabel automation tersebut.
+
+Verifikasi konfigurasi melalui `npm run doctor` berhasil: target staging dan base
+URL baru terbaca. Shared settings juga mengembalikan baseURL dan apiBaseURL yang
+sama, `http://192.168.101.138:6004`. HEAD `/login` merespons HTTP 200; GET menampilkan
+judul EMS. Login dan skenario bisnis pada server baru belum dijalankan.
+`npm run check` masih terhenti pada formatting spec export Report sebelumnya.
+
+Build `v1.0.5-staging` masih merupakan nilai konfigurasi dan belum dikonfirmasi pada
+server baru. Hasil run yang dicatat sebelum perubahan URL ini berasal dari target
+sebelumnya. URL dan metadata laporan historis dipertahankan agar bukti pengujian
+tidak berubah menjadi klaim hasil pada server baru.
+
+## FEAT-029 / TS-020 edit upcoming schedule — 29 Oktober 2026
+
+Flow mengikuti stepsSummary terbaru: login Admin/PJ, menu Schedule, Upcoming,
+edit schedule dari flow TS-017, ubah hanya description dan start time, lalu save.
+UI staging memakai tombol `Update schedule`. Spec berada di
+`cypress/e2e/FEAT-029-edit-schedule/edit-schedule.cy.js`; locator dan interaksi
+ditambahkan pada `SchedulePage` yang sudah ada.
+
+TS-017 membersihkan datanya setelah run. Karena itu, TS-020 membuat prasyarat
+sendiri memakai form/fixture yang sama, nama `QA-TS017-<role>-<timestamp>`, Room
+`SD 2`, Turn ON, No end, repeat off, dan waktu +1 jam. Test dapat berjalan sendiri,
+tanpa memanggil spec TS-017 atau mengedit schedule bisnis bersama. Hook cleanup
+menghapus hanya schedule dengan nama unik tersebut setelah pengujian.
+
+Description baru `TS-020 Updated`; start time +2 jam WIB dari awal masing-masing
+test, sehingga memenuhi syarat lebih dari satu jam. Helper waktu menerima offset
+menit, dengan default 60 untuk TS-017 dan 120 untuk edit TS-020. Guard tanggal
+default form tetap berlaku. Dua unit test tambahan memeriksa offset 120 menit
+dan penolakan pergantian hari pada waktu edit.
+
+Run staging `2026-10-29T06-55-07-590Z-8d5ddb60`, build terkonfigurasi
+`v1.0.5-staging`, Admin/PJ: **2 Pass, 0 Fail**. Kedua role menerima PUT 200 ke
+`/api/schedules/<ID hasil create>`. Payload dibandingkan dengan payload create:
+hanya description/startTime yang berubah. Respons update mempertahankan ID dan
+memuat nilai baru. Setelah reload, hanya satu baris dengan nama/Room/waktu sesuai,
+dan form Edit tetap menampilkan description serta waktu baru. Cleanup berhasil
+untuk kedua role, termasuk DELETE 204 dan hasil pencarian kosong.
+
+Regresi TS-017 `2026-10-29T07-00-17-268Z-0553aff5`: **2 Pass, 0 Fail**,
+mengonfirmasi offset default +1 jam dan cleanup tetap berjalan setelah helper
+waktu mendukung offset +2 jam.
+
+Pemeriksaan kode: syntax **54/54 valid**, unit test **26 Pass**, file terkait
+lolos Prettier. `npm run check` masih terhenti pada formatting export Report yang
+sudah bermasalah sebelumnya. `coverage:catalog` masih gagal karena map TS-027
+menunjuk path export lama FEAT-052 yang sudah dipindahkan. Snapshot katalog dan
+status manual tidak diubah.
+Playwright tidak dijalankan.
+
+Hasil Pass hanya untuk subcakupan konsistensi record Upcoming. Eksekusi perangkat,
+schedule aktif, dan bukti bahwa scheduler tidak double-run belum diuji; satu baris
+dan ID tetap tidak membuktikan jumlah eksekusi jadwal.
+
 ## FEAT-024 / TS-017 flow create schedule Turn ON terbaru — 29 Oktober 2026
 
 Perbaikan pemilihan Room: run inspeksi tanpa submit
