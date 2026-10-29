@@ -1,5 +1,105 @@
 # Validasi EMS QA Automation
 
+## FEAT-024 / TS-017 flow create schedule Turn ON terbaru — 29 Oktober 2026
+
+Perbaikan pemilihan Room: run inspeksi tanpa submit
+`2026-10-29T04-06-13-326Z-5488e7d0` mereproduksi **0 Pass, 2 Fail** pada pemilihan
+Room. Dropdown ditemukan sebagai native SELECT yang enabled, tetapi opsinya hanya
+SD 2 dan test room 2; filter prefix QA-TS009 tidak menghasilkan opsi. Pengguna
+memilih SD 2 sebagai target. Fixture sekarang memakai `roomName: SD 2`, dan Page
+Object menggunakan `cy.get('[name="roomId"]').select(roomName)` lalu memeriksa
+teks option:selected sebelum melanjutkan action/waktu. Cypress tidak mendukung
+`.click()` pada SELECT native; pemilihan memakai perintah `.select()` resminya.
+
+Run terbaru `2026-10-29T04-09-17-525Z-8a14cc0a`, target staging, build
+terkonfigurasi `v1.0.5-staging`, Admin/PJ: **2 Pass, 0 Fail**, termasuk create,
+pemeriksaan setelah reload, dan cleanup kedua schedule SD 2. Syntax **53/53 valid**,
+file terkait lolos Prettier. `npm run check` masih berhenti pada formatting spec
+export Report yang sudah bermasalah sebelumnya.
+
+Flow mengikuti 11 langkah pengguna: login Admin/PJ, menu Schedule, Add schedule,
+nama unik, description, Room hasil skenario sebelumnya, Turn ON, start time satu
+jam sejak awal test, No end, repeat off, lalu Add schedule. Versi awal memakai
+`roomNamePrefix: QA-TS009` dan description; startTime manual dan action off dihapus.
+Target kini diganti ke nama tepat SD 2 sesuai konfirmasi pengguna di atas.
+
+Inspeksi form kedua role menunjukkan opsi QA-TS009 tersedia, action on/off,
+input startTime, No end/End at, dan repeat off. Daftar schedule memakai Socket.IO;
+GET /api/schedules untuk search/tab tidak muncul. Source publik mengonfirmasi
+mutasi tetap REST POST/DELETE /api/schedules, sementara daftar memakai schedule:list.
+Pencarian dan navigasi diperbarui agar menunggu kondisi UI yang relevan.
+
+`getScheduleStartTime(testStartedAt)` menghitung +1 jam dalam Asia/Jakarta dengan
+resolusi menit. Timestamp diambil saat masing-masing test dimulai, sebelum login.
+Form menggunakan scheduledDate default dari tanggal UTC dan tidak menyediakan
+pemilih tanggal. Helper menghentikan test sebelum submit jika tanggal target WIB
+berbeda dari default tersebut. Empat unit test mencakup +1 jam WIB, jam 23,
+pergantian hari WIB, serta tanggal UTC dan WIB yang berbeda.
+
+Run staging `2026-10-29T03-45-15-212Z-46e1f7bb`, build terkonfigurasi
+`v1.0.5-staging`, role Admin/PJ: **2 Pass, 0 Fail**. Kedua form memeriksa Turn ON,
+waktu input, No end terpilih, endTime kosong/readonly, dan repeat off. Kedua create
+menerima POST 201; hasil terlihat setelah reload dan pencarian Upcoming dengan
+nama, Room dan waktu yang sesuai. Hook cleanup berhasil menghapus kedua schedule
+uji melalui DELETE 204 dan menampilkan No matching schedule, sehingga jadwal uji
+tidak ditinggalkan untuk dieksekusi satu jam kemudian.
+
+Run final ulang `2026-10-29T03-49-55-470Z-fe4726ee`: **2 Pass, 0 Fail**, termasuk
+cleanup kedua role. Pencatatan nama untuk cleanup diselesaikan sebelum assertion
+status create, sehingga respons sukses dengan status tak sesuai kontrak tetap
+menjadwalkan cleanup. Syntax **53/53 valid**, unit test **24 Pass**, dan file terkait
+lolos Prettier. `npm run check` masih terhenti pada formatting spec export Report
+yang sudah bermasalah sebelumnya.
+
+Keunikan ID lintas run, konflik schedule, End at, recurrence, eksekusi perangkat,
+dan timezone eksekusi backend belum dibuktikan. Snapshot katalog dan status manual
+tidak diubah oleh implementasi ini; flow terbaru dicatat sebagai requirementOverride.
+Playwright tidak dijalankan.
+
+## FEAT-019 / TS-015 ranking Top Usage — 29 Oktober 2026
+
+Flow mengikuti katalog terbaru: login Admin/PJ/Komandan, mengakses menu Dashboard,
+memilih Top Usage, lalu membandingkan urutan Total usage dari tertinggi ke terendah.
+Spec: `cypress/e2e/FEAT-019-top-usage/top-usage.cy.js`. Locator dan navigasi memakai
+`DashboardPage`. Posisi kolom Total usage dibaca dari header tabel; tidak memakai
+nomor kolom yang di-hardcode.
+
+Assertion memerlukan minimal dua Room, membaca angka kWh pada urutan baris asli,
+memastikan nilainya terisi dan finite, lalu membandingkannya dengan salinan nilai
+yang diurutkan menurun. Tidak ada klik sorting atau perubahan periode sebelum
+assertion. Nilai sama diperbolehkan, tanpa mensyaratkan urutan nama Room saat tie.
+
+Inspeksi awal menemukan Admin/PJ memiliki dua baris (0.045 kWh lalu 0 kWh), sedangkan
+Komandan menampilkan No rooms yet. Pengguna mengonfirmasi Komandan seharusnya
+memiliki data. Run awal spec `2026-10-29T02-58-35-184Z-309b172e` menghasilkan
+**1 Pass, 2 Fail**: Komandan berhasil, tetapi Admin/PJ menampilkan No rooms yet.
+Perubahan role yang mengalami empty state menunjukkan kondisi data yang tidak
+konsisten, bukan bukti bahwa Komandan memang tidak memiliki akses.
+
+Test kemudian menggunakan pengamat summary Socket.IO yang sudah ada untuk menunggu
+data dashboard sebelum melanjutkan klik menu Dashboard dan Top Usage. Tidak ada
+penambahan retry, fixed wait, mock, atau perubahan payload. Run setelah sinkronisasi
+`2026-10-29T03-01-31-242Z-92ce32e0`: **3 Pass, 0 Fail**, ketiga role berhasil
+membandingkan ranking. Penyebab internal kondisi empty state sebelumnya belum
+dibuktikan; beberapa run Pass belum membuktikan suite bebas flaky.
+
+Run final ulang `2026-10-29T03-05-22-305Z-894297f7`, target staging, build
+terkonfigurasi `v1.0.5-staging`, role Admin/PJ/Komandan: **3 Pass, 0 Fail**.
+Kedua run terakhir masing-masing meluluskan tiga role. Bukti JUnit dan
+`cypress.json` tersimpan dalam folder run masing-masing.
+
+Pemeriksaan kode: syntax **51/51 valid**, unit test **20 Pass**. `npm run check`
+masih terhenti pada formatting spec export Report yang sudah bermasalah sebelumnya.
+Pemeriksaan katalog terpisah masih gagal karena map TS-027 menunjuk folder export
+lama `cypress/e2e/FEAT-052-export-report/export-report.cy.js` yang sudah dipindahkan.
+Snapshot skenario yang diubah pengguna dipertahankan; implementasi tidak mengubah
+status manual. Playwright tidak dijalankan.
+
+Cakupan adalah urutan angka yang ditampilkan pada Today default. Akurasi sumber
+telemetry, precision sebelum pembulatan UI, periode lain, tie-breaker, dan dataset
+tie deterministik belum diuji. Test menggunakan data yang ada tanpa mengubah Room
+atau telemetry.
+
 ## FEAT-018 / TS-014 informasi Current, Peak, Avg — 28 Oktober 2026
 
 Flow mengikuti `stepsSummary` dan expected result katalog terbaru: Admin dan PJ
@@ -226,7 +326,7 @@ ini. Snapshot status manual tidak diubah. `npm.cmd run check` lulus:
 
 ## FEAT-024 / TS-017 tambah schedule non-repeat — 22 Oktober 2026
 
-Flow sederhana saat ini: login PJ/Admin → menu Schedule → Add schedule → isi
+Flow pada 22 Oktober: login PJ/Admin → menu Schedule → Add schedule → isi
 form → verifikasi toggle off dan label `Repeat off` → Add schedule → buka
 Upcoming dan cari nama schedule → verifikasi satu baris dengan Room/waktu
 sesuai input. Nama unik menggunakan `QA-TS017-<role>-<timestamp>`; durasi

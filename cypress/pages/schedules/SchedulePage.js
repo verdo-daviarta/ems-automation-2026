@@ -12,39 +12,20 @@ export class SchedulePage {
   }
 
   openUpcoming() {
-    cy.intercept({
-      method: 'GET',
-      pathname: '/api/schedules',
-      query: { status: 'upcoming' }
-    }).as('upcomingSchedules');
     cy.contains('button', /^Upcoming schedule$/).click();
-    return cy.wait('@upcomingSchedules').then((interception) => {
-      expect(interception.response.statusCode).to.eq(200);
-      return interception;
-    });
+    return cy.contains('button', /^Upcoming schedule$/).should('be.disabled');
   }
 
   search(name) {
-    cy.intercept({
-      method: 'GET',
-      pathname: '/api/schedules',
-      query: { search: name }
-    }).as('scheduleSearch');
-    cy.get('input[placeholder="Search..."]').clear().type(name);
-    return cy.wait('@scheduleSearch').then((interception) => {
-      expect(interception.response.statusCode).to.eq(200);
-      return interception;
-    });
+    cy.get('input[placeholder="Search..."]').clear().type(name).should('have.value', name);
+    return this.scheduleRow(name).should('have.length', 1).and('be.visible');
   }
 
   scheduleRow(name) {
     return cy
-      .get('table tbody tr')
-      .filter((_, row) =>
-        [...row.querySelectorAll('td')].some(
-          (cell) => cell.innerText.trim().split('\n')[0] === name
-        )
-      );
+      .get('table tbody td')
+      .filter((_, cell) => cell.innerText.trim() === name)
+      .closest('tr');
   }
 
   openAddForm() {
@@ -53,14 +34,33 @@ export class SchedulePage {
   }
 
   fillForm({ name, description, roomName, action, startTime }) {
-    cy.get('[role="dialog"]').within(() => {
-      cy.get('input[name="name"]').type(name);
-      cy.get('textarea[name="description"]').type(description);
-      cy.get('select[name="roomId"]').select(roomName);
-      cy.get('select[name="action"]').select(action);
-      cy.get('input[name="startTime"]').type(startTime);
-      cy.get('input[type="radio"][value="no-end"]').check();
-    });
+    this.form.find('input[name="name"]').type(name);
+    this.form.find('textarea[name="description"]').type(description);
+    this.roomDropdown.should('be.visible').and('be.enabled').select(roomName);
+    this.roomDropdown.find('option:selected').should('have.text', roomName);
+    this.form.find('select[name="action"]').select(action).should('have.value', action);
+    this.form.find('input[name="startTime"]').type(startTime).should('have.value', startTime);
+    return this.form.find('button#no-end').click();
+  }
+
+  get roomDropdown() {
+    return cy.get('[name="roomId"]');
+  }
+
+  get form() {
+    return cy.get('[role="dialog"] form');
+  }
+
+  get noEndOption() {
+    return this.form.find('input[type="radio"][value="no-end"]');
+  }
+
+  get endTime() {
+    return this.form.find('input[name="endTime"]');
+  }
+
+  get dialog() {
+    return cy.get('[role="dialog"]');
   }
 
   get repeatToggle() {
@@ -76,33 +76,20 @@ export class SchedulePage {
     cy.get('[role="dialog"]')
       .contains('button', /^Add schedule$/)
       .click();
-    cy.wait('@createSchedule').its('response.statusCode').should('eq', 201);
-    return cy.get('[role="dialog"]').should('not.exist');
+    return cy.wait('@createSchedule');
   }
 
   cleanup(name) {
+    expect(name, 'cleanup hanya schedule milik TS-017').to.match(/^QA-TS017-(admin|pj)-\d+$/);
     this.visit();
-    this.search(name).then(({ response }) => this.deleteSearchResult(name, response));
     this.openUpcoming();
-    return this.search(name).then(({ response }) => this.deleteSearchResult(name, response));
+    this.search(name);
+    this.delete(name);
+    return cy.contains(/^No matching schedule$/).should('be.visible');
   }
 
-  deleteSearchResult(name, response) {
-    const { data, totalRows } = response.body.data;
-    if (totalRows === 0) {
-      return;
-    }
-    expect(data, 'cleanup hanya satu schedule milik test').to.have.length(1);
-    expect(data[0].name).to.eq(name);
-    expect(data[0].id, 'ID cleanup').to.be.a('string').and.not.be.empty;
-    this.delete(name, data[0].id);
-    return this.search(name).then(({ response: afterDelete }) => {
-      expect(afterDelete.body.data.totalRows, 'schedule uji sudah dihapus').to.eq(0);
-    });
-  }
-
-  delete(name, id) {
-    cy.intercept({ method: 'DELETE', pathname: `/api/schedules/${id}` }).as('deleteSchedule');
+  delete(name) {
+    cy.intercept({ method: 'DELETE', pathname: '/api/schedules/*' }).as('deleteSchedule');
     this.scheduleRow(name).find('button[aria-label^="Delete schedule"]').click();
     cy.get('[role="dialog"]')
       .should('contain.text', `"${name}"`)

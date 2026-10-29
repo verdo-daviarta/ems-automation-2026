@@ -2,7 +2,7 @@
 
 Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
-Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **18 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
+Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **19 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
 
 ## Mulai di VS Code lokal
 
@@ -164,23 +164,28 @@ Dataset harus berisi minimal 150 notifikasi agar halaman 3 dengan 50 rows penuh:
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-011-notification-pagination/notification-pagination.cy.js
 ```
 
-TS-017 menyiapkan satu schedule non-repeat per role Admin dan PJ. Isi Room uji
-yang boleh dijadwalkan serta `startTime` (`HH:mm`) pada
-`cypress/fixtures/schedules/non-repeat.json` sebelum menjalankan. Kedua nilai
-dibiarkan kosong sampai target dan waktu ditentukan pengguna. Test membuka
-login, menu Schedule, dan form Add schedule sebelum memeriksa fixture. Jika
-Room belum diisi atau waktu tidak berformat `HH:mm`, test berhenti pada form
-dengan pesan konfigurasi; submit belum dilakukan.
-Gunakan waktu mendatang pada hari yang sama agar schedule masuk tab Upcoming.
-Nilai awal aksi adalah `off`, durasi `No end`.
+TS-017 menyiapkan satu schedule non-repeat per role Admin dan PJ. Fixture
+`cypress/fixtures/schedules/non-repeat.json` menyimpan `roomName` dan description.
+Room dipilih menggunakan `cy.get('[name="roomId"]').select(roomName)` sesuai nama
+opsi yang terlihat. Target saat ini `SD 2`, sesuai konfirmasi pengguna; jika tidak
+tersedia di dropdown, test berhenti sebelum submit.
 
-Flow: login PJ/Admin → menu Schedule → Add schedule → isi form → periksa
-toggle off dan label `Repeat off` → Add schedule → Upcoming schedule → cari
-nama schedule → periksa satu hasil dengan Room dan waktu sesuai input.
-Nama schedule menggunakan `QA-TS017-<role>-<timestamp>`. Submit menunggu POST
-201 sebelum pencarian. Hook cleanup menghapus hanya nama/ID milik test dari
-daftar Active/Upcoming, termasuk setelah kegagalan assertion. Eksekusi
-perangkat pada waktu jadwal tidak diuji.
+Flow: login Admin/PJ → menu Schedule → Add schedule → isi nama unik dan description
+→ pilih Room yang sudah dibuat → Turn ON → waktu mulai satu jam dari awal test
+→ No end → pastikan repeat off → Add schedule.
+
+Nama schedule menggunakan `QA-TS017-<role>-<timestamp>`. Waktu dihitung dalam WIB
+melalui `cypress/support/scheduleTime.js`, dengan resolusi menit sesuai input UI.
+Form staging memakai tanggal default UTC dan tidak menyediakan pemilih tanggal.
+Test berhenti sebelum submit jika tanggal target satu jam mendatang berbeda dari
+tanggal default tersebut, agar tidak menyimpan jadwal dengan tanggal yang keliru.
+
+Setelah POST 201 dan dialog tertutup, test memuat ulang halaman, membuka Upcoming,
+dan mencari nama unik untuk memeriksa Room serta waktu. Pencarian menunggu hasil UI
+karena daftar schedule memakai Socket.IO. Cleanup menghapus hanya schedule milik
+test melalui UI, memeriksa DELETE 204 dan hasil pencarian kosong, termasuk setelah
+kegagalan assertion sesudah create berhasil. Eksekusi perangkat tidak diuji dan
+schedule Turn ON dihapus setelah verifikasi.
 
 ```powershell
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js
@@ -263,6 +268,18 @@ nilai/unit dan akurasi perhitungan metrik belum divalidasi.
 
 ```powershell
 npm run cy:run -- --spec cypress/e2e/FEAT-018-energy-metrics/energy-metrics.cy.js
+```
+
+TS-015 / FEAT-019 mengikuti langkah login Admin/PJ/Komandan, mengakses Dashboard,
+memilih Top Usage, lalu membandingkan urutan Total usage dari tertinggi ke terendah.
+Summary Socket.IO ditunggu sebelum navigasi agar data dashboard sudah diterima.
+Test membaca kolom berdasarkan header Total usage dan memerlukan minimal dua Room.
+Nilai yang sama diperbolehkan; tidak ada klik sorting sebelum assertion ranking.
+Periode yang diperiksa adalah Today default dan nilai yang dibandingkan adalah
+angka yang tampil di UI.
+
+```powershell
+npm run cy:run -- --spec cypress/e2e/FEAT-019-top-usage/top-usage.cy.js
 ```
 
 ## Menjalankan dan memeriksa hasil

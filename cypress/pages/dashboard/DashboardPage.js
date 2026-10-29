@@ -53,6 +53,26 @@ export class DashboardPage {
     return this.energyTimelineCard.contains('span', label);
   }
 
+  get topUsageCard() {
+    return cy.contains('p', /^Top usage$/).closest('div.rounded-xl');
+  }
+
+  get topUsageTotals() {
+    // Ambil posisi dari header agar tidak bergantung pada urutan kolom tetap.
+    return this.topUsageCard
+      .contains('th', /^Total usage$/)
+      .invoke('index')
+      .then((columnIndex) => this.topUsageCard.find(`tbody tr td:nth-child(${columnIndex + 1})`));
+  }
+
+  openTopUsage() {
+    return cy
+      .contains('button', /^Top Usage$/)
+      .should('be.visible')
+      .and('be.enabled')
+      .click();
+  }
+
   selectEnergyTimelinePeriod(period) {
     return this.energyTimelineFilter(period).should('be.visible').and('be.enabled').click();
   }

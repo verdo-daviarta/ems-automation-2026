@@ -14,7 +14,7 @@
     "format": "prettier --write \"**/*.{js,cjs,mjs,json,html,css}\"",
     "format:check": "prettier --check \"**/*.{js,cjs,mjs,json,html,css}\"",
     "syntaxcheck": "node scripts/syntax.mjs",
-    "test:unit": "node --test checks/settings.test.cjs checks/demo.test.mjs checks/reporting.test.mjs checks/downloads.test.cjs",
+    "test:unit": "node --test checks/settings.test.cjs checks/demo.test.mjs checks/reporting.test.mjs checks/downloads.test.cjs checks/schedule-time.test.mjs",
     "test": "npm run test:demo",
     "test:demo": "node scripts/run.mjs demo all",
     "demo:serve": "node demo/server.mjs",

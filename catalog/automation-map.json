@@ -146,19 +146,41 @@
       }
     },
     {
-      "testId": "TS-017",
+      "testId": "TS-015",
       "engine": "cypress",
-      "file": "cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js",
-      "implementedScope": "PJ dan Admin login, membuka menu Schedule dan Add schedule, mengisi form, memeriksa toggle off serta label Repeat off, lalu submit. Setelah POST 201, test membuka Upcoming dan mencari nama unik; memeriksa satu baris dengan Room/waktu sesuai input. Cleanup menghapus hanya schedule milik test dari Active/Upcoming.",
-      "remainingScope": "Create/search/cleanup flow terbaru belum dijalankan end-to-end: Room dan waktu belum ditentukan pengguna. Keunikan ID, persistensi setelah reload, End at, eksekusi perangkat, konflik jadwal, timezone server, dan recurrence tidak termasuk flow sederhana ini. Target aktif masih perlu dikonfirmasi; fixture sengaja belum diisi.",
+      "file": "cypress/e2e/FEAT-019-top-usage/top-usage.cy.js",
+      "implementedScope": "Admin, PJ, dan Komandan login melalui UI, menunggu summary Socket.IO sebagai kesiapan data dashboard, mengakses menu Dashboard dan Top Usage, lalu membandingkan nilai kolom Total usage dalam urutan baris yang langsung ditampilkan. Memerlukan minimal dua baris; urutan harus menurun atau sama (tie diperbolehkan). Test tidak mengklik sorting dan tidak mengubah periode Today default.",
+      "remainingScope": "Sumber/akurasi nilai penggunaan, precision sebelum pembulatan UI, filter periode lain, tie-breaker antar-Room dengan nilai sama, dan fixture tie deterministik belum dicakup. Menggunakan data staging yang sudah ada; tidak membuat atau mengubah data Room/telemetry.",
       "coverage": "starter-subscope",
-      "stagingVerification": "Fail",
+      "stagingVerification": "Pass",
       "stagingEvidence": {
         "target": "staging",
         "buildId": "v1.0.5-staging",
-        "runId": "2026-10-22T09-28-59-664Z-d173c22e",
+        "runId": "2026-10-29T03-05-22-305Z-894297f7",
+        "roles": "admin,pj,komandan",
+        "previousPassRunId": "2026-10-29T03-01-31-242Z-92ce32e0",
+        "scope": "3 Pass, 0 Fail pada dua run berturut-turut setelah menunggu summary Socket.IO sebelum navigasi Dashboard. Ketiga role menampilkan minimal dua Room, dan Total usage dalam urutan menurun tanpa klik sorting. Run awal sebelum sinkronisasi 1 Pass, 2 Fail karena Admin/PJ menampilkan No rooms yet, sementara inspeksi sebelumnya menunjukkan Komandan kosong. Penyebab internal empty state belum dibuktikan; hasil Pass tidak membuktikan suite bebas flaky. Status manual snapshot tidak diubah."
+      }
+    },
+    {
+      "testId": "TS-017",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js",
+      "requirementOverride": {
+        "confirmedAt": "2026-10-29",
+        "source": "Permintaan pengguna: 11 langkah create schedule Admin/PJ; konfirmasi target Room SD 2 dan selector [name=roomId]",
+        "expectedResult": "Nama schedule unik dan description terisi; pilih Room SD 2, action Turn ON, start time satu jam dari awal test, No end dan repeat off, lalu Add schedule."
+      },
+      "implementedScope": "Admin dan PJ login, membuka menu Schedule dan Add schedule, mengisi nama unik/description, memilih nama Room SD 2 dari fixture melalui cy.get('[name=roomId]').select(roomName), lalu memeriksa opsi terpilih. Melanjutkan Turn ON, start time satu jam sejak awal test dalam WIB, No end, endTime kosong/readonly dan repeat off, lalu submit. Memeriksa POST 201, dialog tertutup, Room/waktu muncul setelah reload dan pencarian Upcoming. Cleanup UI menghapus hanya nama schedule milik test, memeriksa DELETE 204 dan hasil pencarian kosong. Daftar/search menunggu UI Socket.IO, bukan GET REST lama.",
+      "remainingScope": "Form tidak menyediakan pemilih tanggal dan memakai tanggal UTC hari ini; test dihentikan sebelum submit jika tanggal target WIB +1 jam berbeda. Waktu input beresolusi menit. Keunikan ID lintas run, eksekusi perangkat, konflik jadwal, timezone eksekusi backend, End at, dan recurrence belum diuji. Nama Room fixture harus tersedia di dropdown masing-masing role.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-29T04-09-17-525Z-8a14cc0a",
         "roles": "admin,pj",
-        "scope": "Run final spec: 0 Pass, 2 Fail karena fixture roomName kosong. PJ dan Admin berhasil login, membuka /schedule lewat menu dan form Add schedule sebelum assertion data berhenti. Tidak ada submit. Sebelumnya assertion fixture berada sebelum login sehingga runner tampak tidak membuka URL; urutan sudah diperbaiki. Preflight form/search tanpa submit 2 Pass pada 2026-10-22T09-23-39-393Z-d26c95e0. Status manual snapshot tidak berubah."
+        "scope": "2 Pass, 0 Fail setelah pemilihan Room diperbarui: Admin dan PJ memilih SD 2 melalui selector [name=roomId] dan memverifikasi opsi terpilih. Kedua role menyelesaikan Turn ON, startTime +1 jam WIB, No end dan repeat off, menerima POST 201, lalu memeriksa nama/Room/waktu setelah reload dan pencarian Upcoming. Hook cleanup berhasil untuk kedua role, DELETE 204 dan No matching schedule teramati. Inspeksi sebelumnya mereproduksi error karena prefix QA-TS009 tidak lagi tersedia, bukan karena selector tidak menemukan dropdown. Status manual snapshot tidak berubah."
       }
     },
     {
