@@ -1,4 +1,16 @@
 import { qa } from '../../support/settings.js';
+import { getLatestTestRoomName } from '../../support/latestTestRoom.js';
+
+const testSchedulePattern = /^QA-TS017-(admin|pj)-(?:\d{8}-\d{6}|\d{13})$/;
+
+function formValues(fields) {
+  return fields.toArray().map((field) => ({
+    name: field.name,
+    type: field.type,
+    value: field.value,
+    ...(['checkbox', 'radio'].includes(field.type) ? { checked: field.checked } : {})
+  }));
+}
 
 export class SchedulePage {
   openFromMenu() {
@@ -33,6 +45,30 @@ export class SchedulePage {
     return cy.get('[role="dialog"]').should('be.visible');
   }
 
+  getTestScheduleNames(role) {
+    const prefix = `QA-TS017-${role}-`;
+    this.searchInput.clear().type(prefix).should('have.value', prefix);
+    let names;
+    return cy
+      .get('body')
+      .should(($body) => {
+        names = $body
+          .find('table tbody td')
+          .toArray()
+          .map((cell) => cell.innerText.trim())
+          .filter((name) => name.startsWith(prefix) && testSchedulePattern.test(name));
+        expect(
+          names.length,
+          `Schedule hasil TS-017 untuk ${role} tersedia di Upcoming`
+        ).to.be.greaterThan(0);
+      })
+      .then(() => names);
+  }
+
+  get searchInput() {
+    return cy.get('input[placeholder="Search..."]');
+  }
+
   openEditForm(name) {
     this.scheduleRow(name).find('button[aria-label^="Edit schedule"]').click();
     return this.dialog.contains('h2', /^Edit schedule$/).should('be.visible');
@@ -61,7 +97,18 @@ export class SchedulePage {
     return this.form.find('input[name="startTime"]');
   }
 
+  readFormValues() {
+    return this.form.find('input, select, textarea').then(formValues);
+  }
+
+  assertFormValues(expected) {
+    return this.form.find('input, select, textarea').should(($fields) => {
+      expect(formValues($fields), 'hanya field yang diminta berubah').to.deep.eq(expected);
+    });
+  }
+
   fillForm({ name, description, roomName, action, startTime }) {
+    cy.log(`Room untuk Schedule: ${roomName}`);
     this.form.find('input[name="name"]').type(name);
     this.form.find('textarea[name="description"]').type(description);
     this.roomDropdown.should('be.visible').and('be.enabled').select(roomName);
@@ -73,6 +120,21 @@ export class SchedulePage {
 
   get roomDropdown() {
     return cy.get('[name="roomId"]');
+  }
+
+  getLatestRoomName(prefix) {
+    return this.roomDropdown
+      .find('option')
+      .filter((_, option) => option.value && option.text.startsWith(prefix))
+      .should(($options) => {
+        expect($options.length, `Room hasil TS-025 dengan prefix ${prefix}`).to.be.greaterThan(0);
+      })
+      .then(($options) =>
+        getLatestTestRoomName(
+          $options.toArray().map((option) => option.text),
+          prefix
+        )
+      );
   }
 
   get form() {
@@ -107,22 +169,30 @@ export class SchedulePage {
     return cy.wait('@createSchedule');
   }
 
-  cleanup(name) {
-    expect(name, 'cleanup hanya schedule milik TS-017').to.match(/^QA-TS017-(admin|pj)-\d+$/);
-    this.visit();
-    this.openUpcoming();
-    this.search(name);
-    this.delete(name);
-    return cy.contains(/^No matching schedule$/).should('be.visible');
+  openDeleteConfirmation(name) {
+    expect(name, 'hapus hanya Schedule uji hasil TS-017').to.match(testSchedulePattern);
+    this.scheduleRow(name)
+      .find('button[aria-label^="Delete schedule"]')
+      .should('be.visible')
+      .and('be.enabled')
+      .click();
+    return this.dialog.should('be.visible').and('contain.text', `"${name}"`);
   }
 
-  delete(name) {
-    cy.intercept({ method: 'DELETE', pathname: '/api/schedules/*' }).as('deleteSchedule');
-    this.scheduleRow(name).find('button[aria-label^="Delete schedule"]').click();
-    cy.get('[role="dialog"]')
+  cancelDelete() {
+    this.dialog.contains('button', /^No, cancel$/).click();
+    return this.dialog.should('not.exist');
+  }
+
+  confirmDelete(name) {
+    return this.dialog
       .should('contain.text', `"${name}"`)
       .contains('button', /^Yes, Delete$/)
       .click();
-    return cy.wait('@deleteSchedule').its('response.statusCode').should('eq', 204);
+  }
+
+  assertScheduleMissing(name) {
+    this.searchInput.clear().type(name).should('have.value', name);
+    return cy.contains(/^No matching schedule$/).should('be.visible');
   }
 }

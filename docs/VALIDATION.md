@@ -1,5 +1,293 @@
 # Validasi EMS QA Automation
 
+## Pisahkan Delete ke FEAT-030 / TS-021 — 30 Oktober 2026
+
+Permintaan pengguna: TS-017 dan TS-020 berhenti pada flow stepsSummary, dengan
+Delete sebagai skenario baru TS-021. Kedua hook afterEach penghapusan dan alias
+scheduleToClean dihapus. Helper cleanup otomatis di SchedulePage juga dihapus.
+TS-017 tetap membuat dan memvalidasi hasil lalu mempertahankan data. TS-020
+sekarang memakai Schedule hasil TS-017 yang sudah tersedia di Upcoming untuk role,
+bukan membuat Schedule tambahan. Edit hanya description/startTime; snapshot field
+form sebelum/sesudah reload membuktikan field UI lain tetap. Tidak ada POST Create
+atau DELETE pada TS-020. StepsSummary dan status manual katalog dipertahankan.
+
+TS-021 mengikuti Cancel lalu Confirm: hanya nama Schedule QA berpola
+QA-TS017-admin/pj yang dapat dibuka melalui helper Delete. Cancel harus mengirim
+nol request DELETE/PUT/PATCH dan target tetap ada setelah reload. Confirm harus
+mengirim satu DELETE, menerima 204, serta target hilang setelah reload. Record QA
+lain dalam hasil pencarian role yang sama diperiksa tetap ada bila tersedia.
+Pada dua workflow akhir, otherNames kosong; branch kontrol record lain belum
+terpicu, sehingga hasil ini bukan audit seluruh dataset database.
+
+Workflow diverifikasi dengan Chrome headed pada target
+`http://ems.192.168.101.138.nip.io`, build terkonfigurasi `v1.0.5-staging`
+(versi deployment belum diverifikasi):
+
+- Admin `2026-10-30T09-55-08-541Z-57daf0d5`: **3 Pass, 0 Fail**.
+- PJ `2026-10-30T09-56-36-917Z-8867ed8e`: **3 Pass, 0 Fail**.
+
+Masing-masing menjalankan TS-017 → TS-020 → TS-021 pada satu role terkonfigurasi.
+Data tetap ada setelah Create/Edit dan hanya dihapus ketika TS-021 dipilih.
+Artifact TS-021 mencatat target Admin `QA-TS017-admin-30102026-165515` dan PJ
+`QA-TS017-pj-30102026-165643`, Cancel tanpa write dan endpoint DELETE/204 masing-masing.
+Total akhir **6 Pass**, tanpa cleanup tersembunyi di dua spec awal. Tidak menguji
+eksekusi Schedule pada perangkat. Playwright tidak dijalankan.
+
+Riwayat investigasi dipertahankan: run awal TS-017 dua role
+`2026-10-30T09-44-10-871Z-a3f4242c` menghasilkan **1 Pass, 1 Fail**; setelah data
+Admin dipertahankan, create PJ mendapat HTTP 409 pada Room yang sama. Detail pesan
+409 tidak tersimpan pada run itu; tidak disimpulkan sebagai bug framework atau
+dilonggarkan menjadi Pass. Assertion Create kini menampilkan pesan API bila ada.
+Verifikasi berikutnya diserialkan per role untuk menghindari data yang berbenturan.
+
+Run Admin Edit/Delete `2026-10-30T09-51-08-265Z-57545704` menghasilkan **1 Fail,
+1 Pass**: Edit tersimpan tetapi pencarian target setelah reload tidak menemukan
+baris; TS-021 tetap menemukan dan menghapus target QA. Pencarian exact tambahan
+sebelum membuka Edit dihapus karena resolver prefix sudah menghasilkan nama target.
+Penyebab internal empty state belum dikonfirmasi; tidak ada fixed wait, force click,
+unconditional retry atau suppression. Dua workflow akhir di atas lolos.
+
+Spec inspeksi dialog sementara dihapus. Skenario memilih Admin/PJ dari QA_ROLES;
+TS-020/TS-021 membutuhkan data TS-017 tersedia dan tidak memanggil spec lain sebagai
+setup. TS-017/TS-020 yang dijalankan sendiri akan menyimpan hasil sampai TS-021
+dijalankan secara eksplisit. Hasil lama yang menyebut cleanup di bawah adalah
+riwayat implementasi sebelum permintaan ini.
+
+Pemeriksaan akhir: **35 unit test Pass**, syntax **64/64 valid**, formatting file
+terkait dan `git diff --check` lolos. Map memuat 24 ID starter; validasi TS-021
+terhadap FEAT-030/file/title benar. Pemeriksaan global masih terhenti pada formatting
+lama Export Report dan map TS-027 yang menunjuk path FEAT-052 yang tidak tersedia.
+
+## TS-017 / TS-020 memilih Room hasil TS-025 terbaru — 30 Oktober 2026
+
+Pengguna meminta Choose room pada TS-017 tidak lagi memakai `SD 2`, melainkan Room
+terakhir yang dibuat oleh FEAT-045 / TS-025. Fixture Schedule sekarang menyimpan
+`roomNamePrefix: QA-TS025-admin-`. `SchedulePage.getLatestRoomName()` memeriksa opsi
+dropdown dan helper `latestTestRoom.js` membandingkan timestamp pada nama Room.
+Format epoch milidetik lama dan `ddMMyyyy-HHmmss` WIB didukung; urutan dropdown,
+urutan teks dan pergantian bulan/tahun tidak menentukan hasil. Timestamp/tanggal
+yang tidak valid diabaikan dan kandidat yang cocok harus tersedia; tidak ada
+fallback SD 2, pembuatan Room tambahan atau pemanggilan spec TS-025.
+
+Definisi terbaru pada automation ini berdasarkan timestamp nama hasil TS-025,
+bukan `createdAt` database. Room yang namanya diedit di luar pola atau tidak
+tersedia untuk role tidak dipakai. Pilihan aktual dicatat di log Cypress. TS-020
+memakai fixture yang sama sehingga setup-nya diselaraskan dengan resolver yang
+sama; perilaku edit dan assertion payload tetap.
+
+Run Chrome headed `2026-10-30T08-41-36-287Z-7597ad19`: **4 Pass, 0 Fail**,
+masing-masing **2 Pass** TS-017 dan TS-020 untuk Admin/PJ, target
+`http://ems.192.168.101.138.nip.io`, build terkonfigurasi `v1.0.5-staging`
+(versi deployment belum diverifikasi). TS-017 memeriksa create, No end/repeat off,
+Room dan waktu setelah reload. TS-020 memeriksa edit description/+2 jam, ID sama
+dan payload field lain tetap serta hasil reload. Cleanup keempat Schedule berhasil
+sebelum waktu eksekusinya. Tidak menguji eksekusi scheduler atau power perangkat.
+
+Unit test resolver mencakup opsi tak berurutan, pergantian bulan/tahun, perbandingan
+format lama dengan format WIB, prefix lain/tanggal invalid, serta kegagalan tanpa
+Room TS-025. Tidak ada perubahan expected result atau status manual katalog.
+Riwayat run lama memakai SD 2 di bawah tetap merupakan hasil historis.
+
+Pemeriksaan akhir: **35 unit test Pass**, syntax **63/63 valid**, formatting file
+terkait dan `git diff --check` lolos. Pemeriksaan global masih terhambat formatting
+spec Export Report lama serta map TS-027 ke path FEAT-052 yang tidak tersedia.
+
+## FEAT-053 / TS-028 Enable Device — 30 Oktober 2026
+
+StepsSummary awal bertentangan: tujuan Enable, tetapi konfirmasinya menyebut OFF.
+Pengguna mengonfirmasi memilih Device awal **On**, melakukan **Off lalu On**, dan
+mencatat EUI pada log setiap uji. Pengguna juga meminta skenario **Fail** dengan
+pesan tepat `There's no Device On` bila tidak ada Device On, bukan skip. StepsSummary
+serta prasyarat TS-028 diselaraskan dengan konfirmasi ini; expectedResult dan
+status manual `Not Run` dipertahankan.
+
+Implementasi Cypress Admin/PJ memilih kandidat pertama pada halaman pertama yang
+On, online, tanpa Room dan tidak pending. Toggle diinspeksi sebagai
+`button[role="switch"]` dengan `aria-checked` dan `aria-busy`. Dialog memakai
+`Yes, Turn off device` untuk persiapan dan `Yes, Turn on device` untuk pengujian.
+POST `/api/devices/:id/power` harus menghasilkan command ID/action/target yang
+sesuai. Satu request OFF persiapan dan satu request ON pengujian dihitung terpisah.
+Toggle On saat `aria-busy=true` tidak dianggap sukses; setelah UI selesai, detail
+Device dibaca melalui View/GET API untuk memeriksa status aktual dan pending null.
+Waktu tunggu mengikuti deadline server bila tersedia, maksimum 120 detik per
+command. Deadline response yang diamati adalah 30 menit; batas uji tidak dinaikkan
+menjadi 30 menit. Tidak ada fixed wait, mock respons, force click atau retry test.
+
+Run akhir Chrome headed `2026-10-30T07-59-02-616Z-b92bd92f`: **2 Pass, 0 Fail**,
+role Admin dan PJ, target `http://ems.192.168.101.138.nip.io`, build terkonfigurasi
+`v1.0.5-staging` (versi deployment belum diverifikasi). Kedua role memakai
+`KwH Meter 4`, EUI **`080000004100064e`**. Masing-masing mengirim tepat satu OFF
+persiapan dan satu ON pengujian, HTTP 202. Status Off lalu On diperiksa pada UI/API,
+pending null, lalu reload membuktikan On tetap. Artifact kedua role mencatat
+`persistedAfterReload=true` dan `restoredToInitialOn=true`, dengan observasi akhir
+On, online dan tanpa pending. Tidak ada request tambahan untuk cleanup pada run
+akhir karena kondisi awal On sudah pulih.
+
+EUI ditulis ke log Cypress segera setelah kandidat dipilih, sebelum membaca
+detail. Artifact `reports/runs/<runId>/ts028-<role>-device-power.json` menyimpan
+role, EUI/nama/ID, command ID/fase, aksi, HTTP status, konfirmasi status dan
+pemulihan. `commands[].status` merekam status awal response HTTP, sehingga dapat
+bernilai pending walaupun `confirmedState` kemudian menunjukkan hasil backend.
+Artifact diinisialisasi sebelum login; bila guard tidak ada Device On gagal,
+`resultState` merekam `There's no Device On` dan tidak ada command dikirim.
+Guard ini tidak terpicu pada run akhir karena kandidat tersedia. Jika Device On
+ada tetapi tidak online/tanpa Room, kegagalan menyebut prasyarat kandidat.
+
+Regresi guard lokal `2026-10-30T08-05-09-144Z-0af76803`, target demo dengan fixture
+HTML seluruh switch Off: **1 Fail yang memang diharapkan**, exit 1, dengan pesan
+`There's no Device On`. Artifact menyimpan `resultState` persis pesan tersebut,
+`device=null`, `commands=[]`, dan `requests=[]`. Tidak ada error suppression atau
+mock keberhasilan hardware; uji ini hanya membuktikan guard dan pencatatan alasan
+gagal, tidak menyentuh staging. Spec diagnostik yang sengaja gagal dihapus.
+
+Riwayat run power awal `2026-10-30T07-48-06-092Z-58c96960`: **0 Pass, 2 Fail**.
+Admin gagal saat View akibat elemen detached sebelum command. Locator diperbaiki
+dengan mengambil label stabil lalu query tombol kembali dari root, tanpa membawa
+elemen tabel lama. PJ menyelesaikan OFF tetapi ON melewati batas 120 detik dalam
+status pending; cleanup mendapati Device Off/offline sehingga tidak mengirim
+command pemulihan tambahan. Regresi View baca-saja
+`2026-10-30T07-56-05-622Z-0aa83ba2` **1 Pass**, hanya membuktikan pembacaan, bukan
+keberhasilan Enable. API saat 07:56:16 UTC masih Off/offline/pending null. Pada
+awal run akhir 07:59 UTC Device kembali On/online; sebab perubahan ketersediaan
+tidak dikonfirmasi. Hasil gagal awal tidak diubah menjadi Pass atau dihapus.
+
+Ini membuktikan command/UI/backend yang dilaporkan aplikasi; bukan exactly-once
+publish MQTT/LoRaWAN atau pengukuran relay fisik independen. Skenario tetap
+bergantung pada simulator/perangkat online yang dapat menerima command. Playwright
+tidak dijalankan dan semua spec inspeksi sementara dihapus.
+
+Pemeriksaan akhir: **29 unit test Pass**, syntax **62/62 valid**, Prettier file
+terkait dan `git diff --check` lolos. Katalog tetap 124 ID (123 snapshot + TS-124
+lokal), map 23 ID starter. `npm run check` masih berhenti pada formatting lama
+`FEAT-096-098-export-report/export-report.cy.js`; `coverage:catalog` terpisah
+masih gagal karena map TS-027 menunjuk file lama FEAT-052. Keduanya tidak diubah
+pada implementasi TS-028.
+
+## FEAT-065 / TS-124 Device terlihat pada detail Room — 30 Oktober 2026
+
+TS-124 ditambahkan pengguna secara lokal pada katalog, di luar snapshot 123
+skenario tanggal 9 Oktober. StepsSummary mengharuskan memilih Room untuk Device
+yang belum memiliki Room, Update, lalu membuka detail Room yang sama dan
+memeriksa Device. Pengguna mengonfirmasi **Admin saja**; metadata testData dan
+expectedResult yang masih tersalin dari Report diselaraskan dengan flow tersebut.
+Prasyarat dibuat eksplisit. StepsSummary dipertahankan dan status manual tetap
+`Not Run`, terpisah dari hasil automation.
+
+Inspeksi baca-saja mengonfirmasi route `/rooms/detail/:id`, heading nama Room,
+serta tabel dengan header `Device(s)` dan EUI di sel Device. Implementasi memakai
+`RoomDetailsPage` baru, `RoomsPage.openFromMenu()` dan pembukaan View yang menunggu
+handler klik siap. Pemilihan Device dan Room memakai helper TS-033 serta fixture
+prefix `QA-TS025-admin-`; spec berjalan sendiri tanpa memanggil TS-033/TS-025.
+Gateway dan name Device dipertahankan, tidak memilih Kerlink 2 pada TS-124.
+
+Run Cypress Chrome headed `2026-10-30T07-10-59-492Z-a84e9c91`: **1 Pass, 0 Fail**,
+role Admin, target `http://ems.192.168.101.138.nip.io`, build terkonfigurasi
+`v1.0.5-staging` (versi deployment belum diverifikasi). PUT Device merespons 200
+dengan Room terpilih dan name/gateway awal. Room terlihat pada daftar Device.
+Menu Rooms dibuka, Room yang sama dicari dan View diklik; route/heading sesuai,
+EUI serta nama Device terlihat pada tabel detail Room. Cleanup mengembalikan Room
+kosong serta gateway awal dan memverifikasinya setelah navigasi ulang.
+
+Tidak mencakup PJ/Komandan, Device di halaman lain, real-time lintas sesi,
+kontrol ON/OFF, atau eksekusi hardware. Playwright tidak dijalankan. Data Room
+yang sudah ada tidak dibuat/dihapus dan spec inspeksi sementara dihapus.
+
+Regresi TS-073 role Admin pada helper `RoomsPage.openDetails()` yang dipakai
+bersama: Chrome headless `2026-10-30T07-12-36-358Z-1c42c669`, **1 Pass, 0 Fail**.
+Role lain tidak dijalankan pada regresi ini. Pemeriksaan lokal: **29 unit test
+Pass**, syntax **60/60 valid**, formatting file terkait dan `git diff --check`
+lolos. Katalog memuat 124 ID unik (123 snapshot + TS-124 lokal), dengan 22 ID
+starter. Pemeriksaan global masih gagal pada formatting lama spec Export Report
+dan map TS-027 yang menunjuk file lama FEAT-052; kedua masalah bukan akibat TS-124.
+
+## FEAT-065 / TS-033 dialog pada Edit pertama — 30 Oktober 2026
+
+Pengguna melaporkan `[role="dialog"]` tidak ditemukan pada pembukaan Edit pertama
+di runner interaktif. Sesi `cypress open` tersebut belum dapat diinspeksi karena
+native pipe computer-use tidak tersedia. Run reproduksi tanpa perubahan melalui
+Chrome headed `2026-10-30T06-31-02-862Z-88e0d166` **1 Pass, 0 Fail**; error persis
+yang dilaporkan belum berhasil direproduksi pada run ini.
+
+Kode sebelumnya hanya menunggu koneksi Socket.IO serta heading. Koneksi tersebut
+dapat berasal dari Dashboard dan tidak memeriksa kesiapan handler tombol pada
+halaman Device. Kemungkinan klik mendahului pemasangan handler masih merupakan
+diagnosis sementara, bukan akar masalah yang sudah dikonfirmasi pada sesi pengguna.
+
+`DevicesPage.openEdit()` sekarang dipakai oleh pemilihan Device tanpa Room dan
+pembukaan berdasarkan EUI. Sebelum klik, tombol harus terlihat, enabled, dan
+properti DOM `onclick` berupa function. Assertion ini menunggu melalui mekanisme
+retry assertion Cypress yang sudah ada, tanpa menambah timeout, sleep, force click,
+klik berulang, atau retry test. Setelah klik, dialog tetap wajib muncul.
+
+Run setelah perubahan, Chrome headed `2026-10-30T06-36-12-931Z-6ae4c789`:
+**1 Pass, 0 Fail**, TS-033 role Admin, target `http://ems.192.168.101.138.nip.io`,
+build terkonfigurasi `v1.0.5-staging` (versi deployment belum diverifikasi).
+Kerlink 2 dan Room tersimpan setelah reload, EUI/name tetap; cleanup gateway
+awal dan Room kosong terverifikasi. Verifikasi pada sesi asli `cypress open`
+pengguna masih diperlukan. Playwright tidak dijalankan.
+
+## FEAT-065 / TS-033 pilih gateway Kerlink 2 — 30 Oktober 2026
+
+StepsSummary terbaru pengguna menambahkan pemilihan gateway `Kerlink 2` sebelum
+memilih Room. Redaksi stepsSummary TS-033 dirapikan dengan mempertahankan langkah
+tersebut, pilihan Device tanpa Room, verifikasi setelah reload dan cleanup.
+Expected result serta status manual katalog tidak diubah pada penyesuaian ini.
+Spec memakai `gatewayName` di `cypress/fixtures/devices/edit-device.json` dan
+memeriksa label/ID gateway yang dipilih serta payload PUT.
+
+Run Cypress Chrome `2026-10-30T06-12-25-794Z-17224ef3`: **1 Pass, 0 Fail**, Admin,
+target `http://ems.192.168.101.138.nip.io`, build terkonfigurasi `v1.0.5-staging`
+(versi deployment belum diverifikasi). Gateway Kerlink 2 dan Room QA-TS025 tersimpan
+setelah reload. EUI tetap disabled/tidak berubah dan name tetap. Cleanup memulihkan
+gateway awal serta Room kosong dan memeriksa keduanya setelah navigasi ulang.
+Tidak mengubah kontrol ON/OFF. Playwright tidak dijalankan.
+
+## FEAT-065 / TS-033 Edit Device versi awal — 30 Oktober 2026
+
+Flow mengikuti stepsSummary saat implementasi awal: Admin membuka menu
+Device, memilih Edit pada Device tanpa Room, memeriksa EUI disabled, memilih Room
+yang sudah dibuat, lalu Update device. Konfirmasi pengguna menentukan kandidat
+Device yang belum memiliki Room. Implementasi memilih kandidat pertama pada
+halaman pertama serta Room pertama berawalan `QA-TS025-admin-`; prefix tersimpan
+di `cypress/fixtures/devices/edit-device.json`. Tidak memanggil spec TS-025.
+
+Inspeksi UI mengonfirmasi route `/device`, tombol `aria-label="Edit <name>"`,
+input `name="eui"` disabled, dan native select `name="roomId"`. Source frontend
+yang disajikan deployment memakai PUT `/api/devices/:id`, tidak menyertakan EUI
+pada payload Update, serta mengubah nilai Room/gateway kosong menjadi `null`.
+Frontend menggunakan API/socket `http://192.168.101.138:6003`; base URL frontend
+aktif dari `.env` adalah `http://ems.192.168.101.138.nip.io`.
+
+Run final Cypress Chrome `2026-10-30T05-12-21-735Z-84a81f1d`: **1 Pass, 0 Fail**,
+role Admin, build terkonfigurasi `v1.0.5-staging` (versi deployment belum diverifikasi).
+Device `KwH Meter 5` semula tanpa Room dipilihkan
+`QA-TS025-admin-30102026-105836`. PUT merespons 200 dengan payload name/gatewayId/roomId
+sesuai. Setelah reload, Room tersimpan, EUI tetap disabled/tidak berubah, dan
+name/gateway tetap. Hook cleanup mengembalikan Room kosong dan memverifikasinya
+setelah navigasi ulang. Tidak mengubah status ON/OFF atau menghapus Device/Room.
+
+Run awal `2026-10-30T05-06-24-151Z-c8b16b9e` gagal setelah Update saat membuka
+kembali form: tabel terlepas dari DOM selama interaksi pencarian. Percobaan
+pemulihan berikutnya juga menunjukkan klik Edit setelah navigasi belum stabil;
+menunggu event `device:list` tidak tepat karena event tersebut tidak selalu
+dikirim pada kunjungan awal. Implementasi final memakai query EUI langsung pada
+tabel dan menunggu paket CONNECT Socket.IO pada polling/WebSocket sebelum
+interaksi halaman. Tidak ada sleep, force click, mock, atau retry tambahan.
+Pemulihan terpisah `2026-10-30T05-11-40-659Z-71f21ec9` **1 Pass** mengonfirmasi
+Device kembali tanpa Room sebelum run final. Spec diagnostik/pemulihan dihapus.
+
+Cakupan PJ, Device di halaman lain, perubahan name/gateway, dan penolakan EUI
+melalui API belum dibuktikan. Pencarian EUI bukan bagian flow TS-033 dan hasil
+diagnostiknya belum cukup untuk menyimpulkan akar masalah pencarian aplikasi.
+Playwright tidak dijalankan; status manual katalog tidak diubah oleh automation.
+
+Pemeriksaan lokal: **29 unit test Pass**, syntax **58/58 valid**, dan formatting
+file TS-033 terkait lolos Prettier. `npm run check` masih berhenti pada formatting
+lama `cypress/e2e/FEAT-096-098-export-report/export-report.cy.js`. Pemeriksaan
+`coverage:catalog` terpisah juga masih gagal pada map TS-027 yang menunjuk file
+lama `cypress/e2e/FEAT-052-export-report/export-report.cy.js`. Kedua masalah
+tersebut sudah ada sebelum implementasi TS-033 dan tidak diubah pada pekerjaan ini.
+
 ## Runner Cypress masih memakai URL lama — 29 Oktober 2026
 
 Runner EMS yang masih terbuka dibuat pukul 10:23 WIB, sedangkan `.env` diubah

@@ -167,36 +167,58 @@
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js",
       "requirementOverride": {
-        "confirmedAt": "2026-10-29",
-        "source": "Permintaan pengguna: 11 langkah create schedule Admin/PJ; konfirmasi target Room SD 2 dan selector [name=roomId]",
-        "expectedResult": "Nama schedule unik dan description terisi; pilih Room SD 2, action Turn ON, start time satu jam dari awal test, No end dan repeat off, lalu Add schedule."
+        "confirmedAt": "2026-10-30",
+        "source": "Permintaan pengguna: ganti SD 2 dengan Room hasil FEAT-045 / TS-025 yang paling baru dibuat, menggunakan Choose room.",
+        "expectedResult": "Nama schedule unik dan description terisi; pilih Room TS-025 terbaru, action Turn ON, start time satu jam dari awal test, No end dan repeat off, lalu Add schedule."
       },
-      "implementedScope": "Admin dan PJ login, membuka menu Schedule dan Add schedule, mengisi nama unik/description, memilih nama Room SD 2 dari fixture melalui cy.get('[name=roomId]').select(roomName), lalu memeriksa opsi terpilih. Melanjutkan Turn ON, start time satu jam sejak awal test dalam WIB, No end, endTime kosong/readonly dan repeat off, lalu submit. Memeriksa POST 201, dialog tertutup, Room/waktu muncul setelah reload dan pencarian Upcoming. Cleanup UI menghapus hanya nama schedule milik test, memeriksa DELETE 204 dan hasil pencarian kosong. Daftar/search menunggu UI Socket.IO, bukan GET REST lama.",
-      "remainingScope": "Form tidak menyediakan pemilih tanggal dan memakai tanggal UTC hari ini; test dihentikan sebelum submit jika tanggal target WIB +1 jam berbeda. Waktu input beresolusi menit. Keunikan ID lintas run, eksekusi perangkat, konflik jadwal, timezone eksekusi backend, End at, dan recurrence belum diuji. Nama Room fixture harus tersedia di dropdown masing-masing role.",
+      "implementedScope": "Role Admin/PJ terkonfigurasi membuat Schedule non-repeat sesuai stepsSummary, memakai Room TS-025 terbaru berdasarkan timestamp nama. Memeriksa POST 201 dan hasil setelah reload. Schedule dipertahankan tanpa afterEach cleanup atau DELETE, untuk dapat dipakai TS-020/TS-021. Jam +1, No end dan repeat off tetap; Room terpilih dicatat di log.",
+      "remainingScope": "Room terbaru didasarkan timestamp nama yang tersedia di dropdown role, bukan createdAt database. Schedule tersimpan dapat berbenturan dengan run berikutnya; run Create Admin/PJ pada Room sama pernah menerima 409. Verifikasi akhir diserialkan per role Create/Edit/Delete. Guard tanggal tetap; eksekusi perangkat, End at, recurrence dan timezone scheduler belum diuji.",
       "coverage": "starter-subscope",
       "stagingVerification": "Pass",
       "stagingEvidence": {
         "target": "staging",
         "buildId": "v1.0.5-staging",
-        "runId": "2026-10-29T04-09-17-525Z-8a14cc0a",
+        "runId": "2026-10-30T09-56-36-917Z-8867ed8e",
+        "adminRunId": "2026-10-30T09-55-08-541Z-57daf0d5",
+        "baseURL": "http://ems.192.168.101.138.nip.io",
         "roles": "admin,pj",
-        "scope": "2 Pass, 0 Fail setelah pemilihan Room diperbarui: Admin dan PJ memilih SD 2 melalui selector [name=roomId] dan memverifikasi opsi terpilih. Kedua role menyelesaikan Turn ON, startTime +1 jam WIB, No end dan repeat off, menerima POST 201, lalu memeriksa nama/Room/waktu setelah reload dan pencarian Upcoming. Hook cleanup berhasil untuk kedua role, DELETE 204 dan No matching schedule teramati. Inspeksi sebelumnya mereproduksi error karena prefix QA-TS009 tidak lagi tersedia, bukan karena selector tidak menemukan dropdown. Status manual snapshot tidak berubah."
+        "scope": "Masing-masing 1 Pass Admin dan PJ pada dua workflow Chrome headed terpisah. Create 201 dan hasil reload lolos; Schedule tetap ada saat TS-020 dijalankan. Penghapusan berikutnya dilakukan oleh TS-021 terpisah, bukan cleanup TS-017. Build ID dari konfigurasi; status manual tidak berubah."
       }
     },
     {
       "testId": "TS-020",
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-029-edit-schedule/edit-schedule.cy.js",
-      "implementedScope": "Admin dan PJ menyiapkan schedule milik test dengan flow TS-017 pada Room SD 2, membuka Upcoming, lalu mengedit hanya description menjadi TS-020 Updated dan startTime menjadi +2 jam WIB dari awal test. Memeriksa PUT pada ID hasil create, payload hanya berbeda pada dua field tersebut, respons update, serta satu baris dan nilai form setelah reload. Cleanup menghapus schedule milik test.",
-      "remainingScope": "Schedule aktif, eksekusi perangkat, dan pembuktian tidak double-run oleh scheduler belum diuji. Satu baris dan ID tetap hanya membuktikan konsistensi record, bukan jumlah eksekusi. Room fixture harus tersedia; guard tanggal form berlaku pada waktu create +1 jam dan edit +2 jam. Tidak memakai record bisnis bersama atau bergantung pada urutan eksekusi spec TS-017.",
+      "implementedScope": "Admin/PJ membuka Upcoming dan memakai Schedule QA-TS017 milik role yang sudah tersedia. Tidak membuat data baru. Mengubah description dan startTime +2 jam, memeriksa PUT 200 serta ID response cocok dengan endpoint, lalu memeriksa nilai setelah reload. Snapshot seluruh input/select/textarea memastikan hanya description dan startTime berubah. Schedule dipertahankan tanpa DELETE/cleanup.",
+      "remainingScope": "Prasyarat adalah data TS-017 yang masih tersedia; jika tidak ada, test gagal tanpa membuat pengganti. Pemilihan memakai hasil pertama untuk prefix role, bukan ID fixture tetap. Schedule aktif, eksekusi perangkat, double-run scheduler, dan perbandingan semua field database tidak dibuktikan. Skenario mengikuti QA_ROLES dan diverifikasi per role.",
       "coverage": "starter-subscope",
       "stagingVerification": "Pass",
       "stagingEvidence": {
         "target": "staging",
         "buildId": "v1.0.5-staging",
-        "runId": "2026-10-29T06-55-07-590Z-8d5ddb60",
+        "runId": "2026-10-30T09-56-36-917Z-8867ed8e",
+        "adminRunId": "2026-10-30T09-55-08-541Z-57daf0d5",
+        "baseURL": "http://ems.192.168.101.138.nip.io",
         "roles": "admin,pj",
-        "scope": "2 Pass, 0 Fail: kedua role membuat prasyarat TS-017 sendiri, mengedit schedule Upcoming dengan description baru dan startTime +2 jam, PUT 200 pada ID semula, payload field lain tetap sama, nilai respons dan form setelah reload sesuai, serta hasil pencarian hanya satu baris. Hook cleanup berhasil menghapus schedule uji kedua role. Tidak menunggu eksekusi perangkat atau membuktikan tidak double-run oleh scheduler. Status manual snapshot tidak diubah."
+        "scope": "Masing-masing 1 Pass Admin dan PJ pada dua workflow Chrome headed terpisah. Edit terhadap Schedule hasil TS-017, PUT 200, reload dan snapshot field form lolos. Record masih tersedia untuk TS-021; tidak ada setup Create atau cleanup Delete di TS-020. Status manual tetap."
+      }
+    },
+    {
+      "testId": "TS-021",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-030-delete-schedule/delete-schedule.cy.js",
+      "implementedScope": "Role Admin/PJ terkonfigurasi memilih Schedule Upcoming QA-TS017 milik role. Cancel tidak mengirim DELETE/PUT/PATCH dan target tetap tampil setelah reload. Confirm mengirim satu DELETE dengan status 204; target tidak ditemukan setelah reload. Guard membatasi nama target ke pola QA-TS017. Record QA lain pada hasil pencarian yang sama diperiksa tetap ada jika tersedia. Target, Cancel/no-writes dan endpoint Delete dicatat di artifact run.",
+      "remainingScope": "Memerlukan Schedule TS-017 yang sudah ada; tidak membuat data otomatis. Active Schedule dan seluruh efek database tidak diuji. otherNames kosong pada dua workflow akhir, sehingga pemeriksaan record kontrol lain belum terpicu runtime. Bukti target-only adalah konfirmasi nama, satu endpoint DELETE dan hilangnya target; bukan audit seluruh dataset. Tidak ada cleanup otomatis pada TS-017/TS-020.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "baseURL": "http://ems.192.168.101.138.nip.io",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-30T09-56-36-917Z-8867ed8e",
+        "adminRunId": "2026-10-30T09-55-08-541Z-57daf0d5",
+        "roles": "admin,pj",
+        "scope": "Masing-masing 1 Pass Admin/PJ pada workflow terpisah. Cancel tanpa write, target bertahan setelah reload, Confirm satu DELETE/204 dan pencarian kosong setelah reload. Artifact ts021-admin/pj-schedule.json menyimpan target dan endpoint. Tiga spec pada setiap role total 3 Pass, gabungan 6 Pass. Status manual tidak berubah."
       }
     },
     {
@@ -214,6 +236,63 @@
         "role": "admin",
         "roomNamePattern": "QA-TS025-admin-<timestamp>",
         "scope": "Satu Room dibuat melalui Admin dengan nama timestamp unik, response POST sukses, dan Room tetap tampil setelah reload. Nilai nama aktual muncul di log Cypress tetapi tidak dicatat oleh reporter. Duplicate dan PJ belum dicakup; status manual snapshot tidak berubah."
+      }
+    },
+    {
+      "testId": "TS-028",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-053-enable-device/enable-device.cy.js",
+      "requirementOverride": {
+        "confirmedAt": "2026-10-30",
+        "source": "Konfirmasi pengguna: pilih Device awal On, lakukan Off lalu On, catat EUI setiap uji pada log; jika tidak ada Device On, Fail dengan pesan There's no Device On.",
+        "expectedResult": "Satu command ON pada fase pengujian; status backend/UI On sinkron dan bertahan setelah reload. OFF merupakan fase persiapan terpisah. Tidak ada Device On menghasilkan Fail, bukan skip."
+      },
+      "implementedScope": "Admin/PJ memilih kandidat pertama di halaman pertama yang On, online, tanpa Room dan tidak pending. EUI dicatat di Cypress log dan artifact per role. Satu OFF persiapan dan satu ON pengujian melalui dialog, HTTP command ID/target/action diperiksa, pending UI harus selesai lalu GET detail Device harus sesuai. Setelah reload status On diperiksa lagi. Tidak ada Device On menghasilkan error There's no Device On. Pemulihan On hanya untuk Device yang sama jika Off, online dan tidak pending.",
+      "remainingScope": "Memerlukan simulator/perangkat online yang menerima command. Jumlah request UI dihitung; jumlah publish MQTT/LoRaWAN atau exactly-once fisik tidak dibuktikan. Guard tidak ada Device On diverifikasi terpisah pada fixture lokal all-Off, bukan pada staging run akhir yang memiliki kandidat valid. Device di halaman lain dan kondisi offline bukan cakupan happy path. Status manual tetap Not Run.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "baseURL": "http://ems.192.168.101.138.nip.io",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-30T07-59-02-616Z-b92bd92f",
+        "roles": "admin,pj",
+        "deviceEui": "080000004100064e",
+        "scope": "2 Pass, 0 Fail pada Chrome headed: Admin dan PJ memakai EUI 080000004100064e, masing-masing tepat satu POST OFF persiapan dan satu POST ON pengujian, HTTP 202. Status UI/API dikonfirmasi Off lalu On tanpa pending; On bertahan setelah reload. Artifact kedua role menunjukkan restoredToInitialOn true, status On, online, pendingCommand null. Guard There's no Device On tidak terpicu karena kandidat tersedia. Run awal yang gagal dan riwayat Off/offline dipertahankan pada docs/VALIDATION.md. Build ID konfigurasi; versi deployment belum diverifikasi. Manual status tidak berubah."
+      }
+    },
+    {
+      "testId": "TS-033",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-065-edit-device/edit-device.cy.js",
+      "implementedScope": "Sesuai stepsSummary terbaru, Admin membuka menu Device dan Edit pada Device pertama tanpa Room di halaman pertama. Memastikan EUI disabled, memilih gateway Kerlink 2 dan opsi Room pertama berawalan QA-TS025-admin-, lalu Update. Memeriksa HTTP 200, payload hanya name/gatewayId/roomId, gateway/Room tersimpan setelah reload, EUI/name tetap, dan cleanup mengembalikan Room kosong serta gateway awal.",
+      "remainingScope": "PJ, Device pada halaman lain, perubahan nama, gateway lain, serta penolakan perubahan EUI melalui API tidak dicakup. Memerlukan Device tanpa Room, gateway Kerlink 2 dan Room hasil TS-025 yang tersedia; tidak menguji kontrol ON/OFF atau keberhasilan eksekusi perangkat. Manual snapshot tidak diubah.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "baseURL": "http://ems.192.168.101.138.nip.io",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-30T06-36-12-931Z-6ae4c789",
+        "roles": "admin",
+        "scope": "1 Pass, 0 Fail pada Chrome headed setelah menambahkan guard handler klik Edit: Device tanpa Room dipilihkan Kerlink 2 dan Room QA-TS025-admin-, PUT 200, gateway/Room tersimpan setelah reload, EUI disabled/tetap dan name tetap. Cleanup memulihkan Room kosong serta gateway awal. Error dialog pada sesi cypress open pengguna belum direproduksi; diagnosis kesiapan handler masih dugaan. Build ID dari konfigurasi, versi deployment belum diverifikasi. Manual snapshot tidak berubah."
+      }
+    },
+    {
+      "testId": "TS-124",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-065-edit-device/device-room.cy.js",
+      "implementedScope": "Admin membuka menu Device, Edit pada Device pertama tanpa Room di halaman pertama, memilih Room pertama berawalan QA-TS025-admin- lalu Update. Memeriksa PUT 200 dengan name/gateway tetap. Membuka menu Rooms, mencari Room yang sama, klik View, dan memeriksa route/heading Room serta EUI dan nama Device pada tabel Device(s). Cleanup mengembalikan Room kosong dan gateway awal; test independen dari TS-033.",
+      "remainingScope": "PJ/Komandan tidak dicakup sesuai konfirmasi Admin saja. Device di halaman lain, seluruh relasi Device/Room, update real-time pada sesi lain, serta kontrol ON/OFF dan eksekusi perangkat belum diuji. Memerlukan Device tanpa Room di halaman pertama dan Room QA-TS025 yang sudah tersedia. Status manual tetap Not Run.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "baseURL": "http://ems.192.168.101.138.nip.io",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-10-30T07-10-59-492Z-a84e9c91",
+        "roles": "admin",
+        "scope": "1 Pass, 0 Fail pada Chrome headed: PUT Device 200, Room terpilih terlihat pada daftar Device, lalu EUI dan nama Device terlihat pada detail Room yang sama. Cleanup memulihkan Room kosong dan gateway awal. Build ID berasal dari konfigurasi; versi deployment belum diverifikasi. Manual status Not Run tidak diubah."
       }
     },
     {

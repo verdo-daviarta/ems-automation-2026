@@ -1,6 +1,7 @@
 import { DashboardPage } from '../../pages/dashboard/DashboardPage.js';
 import { RoomsPage } from '../../pages/rooms/RoomsPage.js';
 import { qa } from '../../support/settings.js';
+import { formatTestTimestamp } from '../../support/testDataTime.js';
 
 describe('EMS create Room @rooms', () => {
   const { target, roles } = qa();
@@ -10,9 +11,8 @@ describe('EMS create Room @rooms', () => {
     expect(roles).to.include('admin');
     const roomsPage = new RoomsPage();
 
-    // Nama room yang akan dibuat, gunakan timestamp untuk menghindari duplikasi
     const room = {
-      name: `QA-TS025-admin-${Date.now()}`,
+      name: `QA-TS025-admin-${formatTestTimestamp()}`,
       location: 'QA staging automation',
       description: 'TS-025 create Room'
     };

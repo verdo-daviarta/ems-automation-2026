@@ -4,6 +4,7 @@
     "login": "/login",
     "dashboard": "/dashboard",
     "rooms": "/rooms",
+    "device": "/device",
     "schedule": "/schedule",
     "report": "/report",
     "notification": "/notification"

@@ -2,6 +2,7 @@ import { DashboardPage } from '../../pages/dashboard/DashboardPage.js';
 import { NotificationPage } from '../../pages/notifications/NotificationPage.js';
 import { RoomsPage } from '../../pages/rooms/RoomsPage.js';
 import { qa } from '../../support/settings.js';
+import { formatTestTimestamp } from '../../support/testDataTime.js';
 
 function loginWithSession(role) {
   cy.session(['TS-009', role], () => {
@@ -18,7 +19,7 @@ describe('EMS notification from another user CRU @notifications', () => {
     const roomsPage = new RoomsPage();
     const notificationPage = new NotificationPage();
     expect(roles).to.include.members(['admin', 'pj']);
-    const roomName = `QA-TS009-admin-${Date.now()}`;
+    const roomName = `QA-TS009-admin-${formatTestTimestamp()}`;
     cy.log(`Room uji dipertahankan untuk fase Delete: ${roomName}`);
 
     loginWithSession('admin');

@@ -2,6 +2,7 @@ import { DashboardPage } from '../../pages/dashboard/DashboardPage.js';
 import { NotificationPage } from '../../pages/notifications/NotificationPage.js';
 import { RoomsPage } from '../../pages/rooms/RoomsPage.js';
 import { qa } from '../../support/settings.js';
+import { formatTestTimestamp } from '../../support/testDataTime.js';
 
 function loginWithSession(role) {
   cy.session(['TS-010', role], () => {
@@ -18,7 +19,7 @@ describe('EMS notification filters and Read All @notifications', () => {
     expect(roles).to.include.members(['admin', 'pj']);
     const roomsPage = new RoomsPage();
     const notificationPage = new NotificationPage();
-    const roomName = `QA-TS010-admin-${Date.now()}`;
+    const roomName = `QA-TS010-admin-${formatTestTimestamp()}`;
 
     loginWithSession('admin');
     roomsPage.visit();

@@ -7,6 +7,11 @@ const locationSelector = 'textarea[name="location"]';
 const descriptionSelector = 'textarea[name="description"]';
 
 export class RoomsPage {
+  openFromMenu() {
+    cy.get(`a[href="${qa().contract.routes.rooms}"]`).click();
+    return cy.contains('h1', /^Rooms$/).should('be.visible');
+  }
+
   visit() {
     cy.visit(qa().contract.routes.rooms);
     return cy.contains('h1', 'Rooms').should('be.visible');
@@ -36,7 +41,14 @@ export class RoomsPage {
   }
 
   openDetails(name) {
-    return this.roomRow(name).find(`button[aria-label="View ${name}"]`).click();
+    return this.roomRow(name)
+      .find(`button[aria-label="View ${name}"]`)
+      .should('be.visible')
+      .and('be.enabled')
+      .should(($button) => {
+        expect($button[0].onclick, 'handler klik View Room siap').to.be.a('function');
+      })
+      .click();
   }
 
   create({ name, location, description }) {

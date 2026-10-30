@@ -2,7 +2,7 @@
 
 Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
-Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, serta starter script untuk **20 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh 123 skenario atau semua kondisi pada setiap skenario.
+Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, tambahan lokal **TS-124**, serta starter script untuk **24 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh skenario atau semua kondisi pada setiap skenario.
 
 ## Mulai di VS Code lokal
 
@@ -170,16 +170,21 @@ npm.cmd run cy:run -- --spec cypress/e2e/FEAT-011-notification-pagination/notifi
 ```
 
 TS-017 menyiapkan satu schedule non-repeat per role Admin dan PJ. Fixture
-`cypress/fixtures/schedules/non-repeat.json` menyimpan `roomName` dan description.
-Room dipilih menggunakan `cy.get('[name="roomId"]').select(roomName)` sesuai nama
-opsi yang terlihat. Target saat ini `SD 2`, sesuai konfirmasi pengguna; jika tidak
-tersedia di dropdown, test berhenti sebelum submit.
+`cypress/fixtures/schedules/non-repeat.json` menyimpan `roomNamePrefix` dan description.
+Prefix `QA-TS025-admin-` membatasi pilihan ke Room hasil FEAT-045 / TS-025.
+`SchedulePage.getLatestRoomName()` mencari Room terbaru dari opsi Choose room
+berdasarkan timestamp pada nama, kemudian `cy.get('[name="roomId"]').select(roomName)`
+memilihnya. Helper `cypress/support/latestTestRoom.js` mendukung timestamp angka
+format lama serta `ddMMyyyy-HHmmss` WIB; tidak memakai urutan opsi atau sorting teks.
+Jika Room yang cocok dan timestamp valid tidak tersedia, test gagal sebelum submit.
+Nama Room yang dipilih terlihat di log Cypress. Room harus sudah tersedia, tetapi
+TS-017 tidak memanggil atau mewajibkan urutan run spec TS-025.
 
 Flow: login Admin/PJ → menu Schedule → Add schedule → isi nama unik dan description
 → pilih Room yang sudah dibuat → Turn ON → waktu mulai satu jam dari awal test
 → No end → pastikan repeat off → Add schedule.
 
-Nama schedule menggunakan `QA-TS017-<role>-<timestamp>`. Waktu dihitung dalam WIB
+Nama schedule menggunakan `QA-TS017-<role>-<ddMMyyyy-HHmmss>`. Waktu dihitung dalam WIB
 melalui `cypress/support/scheduleTime.js`, dengan resolusi menit sesuai input UI.
 Form staging memakai tanggal default UTC dan tidak menyediakan pemilih tanggal.
 Test berhenti sebelum submit jika tanggal target satu jam mendatang berbeda dari
@@ -187,24 +192,114 @@ tanggal default tersebut, agar tidak menyimpan jadwal dengan tanggal yang keliru
 
 Setelah POST 201 dan dialog tertutup, test memuat ulang halaman, membuka Upcoming,
 dan mencari nama unik untuk memeriksa Room serta waktu. Pencarian menunggu hasil UI
-karena daftar schedule memakai Socket.IO. Cleanup menghapus hanya schedule milik
-test melalui UI, memeriksa DELETE 204 dan hasil pencarian kosong, termasuk setelah
-kegagalan assertion sesudah create berhasil. Eksekusi perangkat tidak diuji dan
-schedule Turn ON dihapus setelah verifikasi.
+karena daftar schedule memakai Socket.IO. Schedule **dipertahankan** setelah
+pengujian; tidak ada DELETE atau cleanup otomatis, termasuk setelah test gagal.
+Penghapusan merupakan flow tersendiri pada TS-021. Eksekusi perangkat tidak diuji.
 
 ```powershell
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js
 ```
 
-TS-020 / FEAT-029 menyiapkan schedule milik test melalui flow TS-017 untuk Admin/PJ,
-lalu membuka Upcoming dan mengedit hanya description serta start time. Description
-baru `TS-020 Updated`; waktu baru +2 jam WIB dari awal test. Test memeriksa ID tetap,
-payload field lain tetap sama, dan nilai tersimpan setelah reload, lalu cleanup.
-Setup ini diperlukan karena TS-017 menghapus datanya setelah verifikasi, sehingga
-TS-020 tetap dapat dijalankan sendiri. Eksekusi scheduler/double-run belum diuji.
+TS-020 / FEAT-029 memakai Schedule TS-017 yang **sudah tersedia** di Upcoming untuk
+role tersebut, dengan prefix `QA-TS017-<role>-`. Test tidak membuat Schedule baru.
+Hanya description (`TS-020 Updated`) dan start time (+2 jam WIB dari awal test)
+yang diubah, kemudian Update schedule. Setelah reload, snapshot field form
+memastikan perubahan tersimpan dan field lain tetap. Record dipertahankan; tidak
+ada DELETE atau cleanup. Eksekusi scheduler/double-run belum diuji.
 
 ```powershell
 npm run cy:run -- --spec cypress/e2e/FEAT-029-edit-schedule/edit-schedule.cy.js
+```
+
+TS-021 / FEAT-030 memisahkan Delete dari Create/Edit: login, menu Schedule,
+Upcoming, pilih Schedule QA milik role, buka Delete dan **No, cancel**, verifikasi
+tidak ada request DELETE/PUT/PATCH serta target tetap ada setelah reload. Buka
+Delete lagi dan **Yes, Delete**, periksa satu DELETE/204 serta target tidak
+ditemukan setelah reload. Schedule QA lain dalam hasil pencarian yang sama
+diperiksa tetap ada bila tersedia. Hanya nama berpola `QA-TS017-admin-...` atau
+`QA-TS017-pj-...` yang dapat dibuka untuk penghapusan melalui helper ini.
+Target dan endpoint DELETE dicatat pada `reports/runs/<runId>/ts021-<role>-schedule.json`.
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-030-delete-schedule/delete-schedule.cy.js
+```
+
+Ketiga spec mengikuti role Admin/PJ yang ada pada `QA_ROLES`. TS-020/TS-021
+memerlukan data TS-017 yang masih tersedia; tidak memanggil spec lain atau membuat
+data pengganti. Verifikasi dilakukan **Create → Edit → Delete per role**: Admin
+selesai dahulu, kemudian PJ. Run Create dua role pada Room yang sama dengan data
+dipertahankan sempat menerima HTTP 409; status tersebut tetap Fail, bukan diabaikan.
+Untuk membuka runner hanya pada satu role, jalankan dari terminal baru:
+
+```powershell
+$env:QA_ROLES = 'admin' # ganti pj untuk workflow PJ
+npm.cmd run cy:open
+```
+
+Pengaturan tersebut hanya berlaku pada proses terminal itu dan tidak mengubah `.env`.
+TS-017 dan TS-020 dapat dijalankan sendiri untuk menyimpan hasilnya; TS-021 hanya
+menghapus ketika spec tersebut dipilih. Schedule yang dipertahankan tetap mengikuti
+action dan waktu yang tersimpan.
+
+TS-028 / FEAT-053 adalah pengujian power Device nyata untuk Admin dan PJ, dengan
+dependency simulator/perangkat online. Sesuai konfirmasi pengguna, pilih kandidat
+pertama di halaman pertama yang sudah On, online, tanpa Room dan tidak pending.
+EUI dicatat pada log Cypress serta artifact
+`reports/runs/<runId>/ts028-<role>-device-power.json`, termasuk command ID/fase.
+Jika tidak ada Device On, test **Fail** dengan pesan `There's no Device On`.
+Jika ada Device On tetapi tidak memenuhi prasyarat online/tanpa Room, test gagal
+pada prasyarat kandidat, tanpa mengirim command.
+
+Flow: login, menu Device, catat EUI, konfirmasi OFF persiapan, tunggu Off UI/API,
+konfirmasi ON pengujian, tunggu On UI/API, reload dan periksa On lagi. Jumlah
+request ON fase pengujian harus satu; OFF persiapan dihitung terpisah. Toggle On
+yang masih pending belum dianggap sukses. Waktu tunggu memakai deadline command
+jika tersedia, dibatasi maksimum dua menit per command. UI memakai label On/Off,
+bukan Enabled/Disabled. Tidak ada mock atau force click.
+
+Hook akhir memeriksa kondisi awal On dan hanya mengirim ON pemulihan jika Device
+Off, online dan tidak pending. Jika Device offline atau pending, pemulihan dapat
+gagal dan akan dilaporkan; jangan menganggap kondisi awal sudah pulih tanpa bukti.
+Run terakhir berhasil untuk Admin dan PJ, dengan kondisi akhir On terverifikasi.
+Riwayat kegagalan awal dan batas verifikasi dicatat di `docs/VALIDATION.md`.
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-053-enable-device/enable-device.cy.js
+```
+
+TS-033 / FEAT-065 mengikuti stepsSummary Admin: menu Device, pilih Edit pada
+Device pertama yang kolom Room-nya `-`, pastikan EUI disabled, pilih gateway
+`Kerlink 2`, pilih Room hasil Create Room, lalu Update device. Gateway diatur
+melalui `gatewayName` pada fixture. Pilihan Room memakai opsi pertama dengan prefix
+`roomNamePrefix` pada `cypress/fixtures/devices/edit-device.json`, saat ini
+`QA-TS025-admin-`. Device harus tersedia pada halaman pertama dan Room harus
+sudah dibuat; test tidak menjalankan TS-025 secara otomatis.
+
+Setelah Update, test memeriksa gateway dan Room tersimpan setelah reload, EUI tetap
+disabled dan tidak berubah, serta name tetap. Interaksi menunggu koneksi Socket.IO
+siap setelah navigasi/reload. Cleanup mengosongkan kembali Room dan mengembalikan
+gateway ke nilai awal pada Device yang dipilih, kemudian memverifikasi hasilnya.
+Pembukaan Edit juga menunggu tombol terlihat, enabled dan handler klik tersedia;
+HTML awal serta koneksi socket saja belum menjadi bukti kesiapan tombol.
+Tidak ada kontrol ON/OFF.
+Cakupan PJ dan percobaan mengganti EUI melalui API belum diimplementasikan.
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-065-edit-device/edit-device.cy.js
+```
+
+TS-124 / FEAT-065 memakai Admin saja sesuai konfirmasi pengguna. Flow: menu Device,
+Edit Device pertama tanpa Room di halaman pertama, pilih Room hasil TS-025,
+Update device, menu Rooms, cari Room yang sama, lalu View. Test memeriksa route
+dan heading Room serta EUI/nama Device pada tabel `Device(s)` di detail Room.
+Gateway dan name Device tetap. Prefix Room memakai `roomNamePrefix` pada fixture
+`cypress/fixtures/devices/edit-device.json`; `gatewayName` di fixture hanya dipakai
+TS-033. TS-124 tidak bergantung pada run TS-033 dan tidak membuat Room baru.
+Cleanup mengembalikan Device tanpa Room serta memeriksa gateway awal tetap.
+Prasyarat: Device tanpa Room dan Room QA-TS025 sudah tersedia; tidak ada ON/OFF.
+
+```powershell
+npm.cmd run cy:run -- --spec cypress/e2e/FEAT-065-edit-device/device-room.cy.js
 ```
 
 TS-073 mencari Room dengan kata kunci `QA-TS009` untuk setiap role staging,
@@ -225,9 +320,16 @@ snapshot katalog dan status manual dipertahankan. Lihat `docs/VALIDATION.md`
 untuk bukti run terbaru serta riwayat assertion navigasi sebelumnya.
 
 TS-025 membuat satu Room melalui UI Admin dengan nama unik
-`QA-TS025-admin-<timestamp>` pada tiap run, mengikuti pola TS-009. Nama aktual
+`QA-TS025-admin-<ddMMyyyy-HHmmss>` pada tiap run, mengikuti pola TS-009. Nama aktual
 terlihat di log Cypress. Room hasil run dipertahankan; skenario duplicate
 menunggu aturan AC yang jelas.
+
+Nama data uji Room (TS-009, TS-010, TS-025) dan Schedule (TS-017, setup TS-020)
+memakai helper `formatTestTimestamp()` di `cypress/support/testDataTime.js`.
+Format WIB `ddMMyyyy-HHmmss`, misalnya `QA-TS025-admin-30102026-141530`,
+memudahkan pembacaan waktu pembuatan. Prefix yang sama pada detik yang sama
+masih dapat menghasilkan nama duplikat; format ini tidak menjamin keunikan
+untuk eksekusi paralel. Timestamp numerik untuk perhitungan waktu tetap digunakan.
 
 ```powershell
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-045-create-room/create-room.cy.js
