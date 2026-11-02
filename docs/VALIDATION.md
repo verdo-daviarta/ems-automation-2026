@@ -1,5 +1,107 @@
 # Validasi EMS QA Automation
 
+## TS-019 expected result: duplikat, Edit dan Delete — 2 November 2026
+
+Pengguna menambah expected result penolakan jadwal sama pada hari sama dan repeat
+dapat diubah/dihapus. Konfirmasi lanjutan: Edit dan Delete harus membuat Schedule
+baru/berbeda. Spec sekarang berisi tiga test independen per role, dengan setup
+UI sendiri dan helper khusus fitur. Tidak bergantung pada data hasil test lain.
+Katalog yang diubah pengguna dan status manual tetap dipertahankan.
+
+- Create mengikuti 12 stepsSummary. Setelah reload, buat duplikat bernama berbeda
+  dengan Room/action/jam/No end/repeatDays sama. Harus 409, toast memuat ID asal,
+  original tetap ada dan nama duplikat tidak tersimpan setelah reload.
+- Edit membuat Schedule baru berakhiran -edit untuk hari +3. Ubah description
+  menjadi TS-019 Updated dan tambah hari +4. PUT 200 harus memakai ID semula;
+  seluruh field serta hari pada form diperiksa setelah reload. Data dipertahankan.
+- Delete membuat Schedule baru berakhiran -delete untuk hari +5/+6. Confirm
+  mengirim DELETE ke ID sendiri, 204, dan nama tidak ditemukan setelah reload.
+  Record Create/Edit tidak menjadi target Delete; tidak ada afterEach cleanup.
+
+Hari setup dipisahkan agar ketiga test tidak membuat jadwal bentrok satu sama
+lain pada waktu yang sama. Helper getScheduleRepeatDays menerima offset hari,
+dengan satu unit test tambahan untuk data Edit/Delete melintasi akhir minggu.
+Guard Delete menerima pola QA-TS017 lama dan hanya QA-TS019 khusus -delete.
+Spec TS-017/TS-020/TS-021 tidak diubah; shared helper Delete tetap membatasi nama QA.
+
+Investigasi toast: Admin run `2026-11-02T04-02-46-553Z-ebb40b4d` dan
+`2026-11-02T04-04-29-163Z-1bb07f50` masing-masing **2 Pass, 1 Fail**. Keduanya
+membuktikan API duplikat 409 dan Edit/Delete berhasil, tetapi assertion mencari
+teks Schedule conflict: yang tidak tampil. Diagnosis live
+`2026-11-02T04-07-21-322Z-37e917be` menangkap toast role=status aria-live=polite:
+`Jadwal bentrok dengan schedule lain (id: ..., ...)`. Assertion kini memakai
+pesan aktual dan ID asal. Source frontend memuat handler Schedule conflict:,
+tetapi handler yang benar-benar tampil memberi pesan backend; tidak disimpulkan
+bahwa seluruh jalur error frontend sama. Tidak ada mock, suppression atau retry
+untuk mengubah respons menjadi Pass. Spec diagnostik sementara sudah dihapus.
+
+Verifikasi akhir Cypress Chrome headed pada
+`http://ems.192.168.101.138.nip.io`, build terkonfigurasi `v1.0.5-staging`
+(versi deployment belum diverifikasi):
+
+- Admin `2026-11-02T04-08-22-026Z-49e5b8b2`: **3 Pass, 0 Fail**.
+- PJ `2026-11-02T04-09-13-193Z-d716eecc`: **3 Pass, 0 Fail**.
+
+Total **6 Pass**. Artifact ts019-role-create/duplicate/edit/delete.json menyimpan
+nama, Room, ID, hari serta status HTTP tanpa credential. Enam record setup pada
+dua run akhir mempunyai ID berbeda; ini bukan audit keunikan seluruh database.
+Record Create/Edit pada run akhir dan run investigasi tetap disimpan. Delete
+hanya menghapus data setup milik test Delete. Eksekusi scheduler/perangkat,
+penghapusan instance historis/future, daily, End at dan AC rinci lain belum diuji.
+
+Pemeriksaan akhir: **40 unit Pass**, syntax **66/66 valid**. Formatting file
+terkait serta git diff --check lolos. npm run check masih gagal pada formatting
+lama Export Report; coverage:catalog masih gagal pada path map TS-027 / FEAT-052
+yang tidak tersedia. Tidak ada perubahan dependency, auth adapter, Playwright,
+CI, credential atau status manual katalog. Hasil 2 Pass di bagian berikut adalah
+versi Create awal sebelum expected result diperluas.
+
+## FEAT-027 / TS-019 Create repeat Schedule — 2 November 2026
+
+Permintaan menyebut TS-10, tetapi FEAT-027 pada katalog adalah TS-019. Implementasi
+mengikuti stepsSummary yang sudah diubah pengguna; TS-010 notifikasi tidak diubah.
+Catalog/test-scenarios.json tidak diedit oleh implementasi ini, termasuk status
+manual. Prasyarat: Room hasil TS-025 yang dapat diakses role sudah tersedia.
+
+Flow Admin/PJ: login, Schedule, Add schedule, isi nama unik dan description,
+pilih Room TS-025 terbaru dari timestamp nama, Turn ON, waktu mulai +1 jam WIB,
+No end, Repeat on, pilih weekday besok/lusa, lalu Add schedule. Pemilihan weekday
+0–6 sesuai kontrak weekly, bukan dua tanggal sekali jalan. Schedule dipertahankan;
+tidak ada cleanup/Delete atau Update tersembunyi. Form edit hanya dibuka untuk
+memeriksa field/hari setelah reload lalu ditutup.
+
+Inspeksi live awal `2026-11-02T03-30-18-202Z-ffd296b3` gagal pada interaksi
+checkbox tersembunyi (`pointer-events: none`); login kedua role berhasil dan
+tidak ada submit. Run inspeksi perbaikan `2026-11-02T03-31-42-725Z-3b47876c`
+**2 Pass** melalui button role switch yang terlihat. Tidak memakai force atau
+fixed wait. Tombol hari saat ini berlabel M T W T F S S, urutan Senin–Minggu
+terverifikasi dari live DOM dan sumber frontend yang tersedia. Page Object
+memeriksa tujuh label sebelum memakai index weekday. Selection diperiksa dari
+kelas border-emerald-500 karena tidak ada aria-pressed/data-testid pada hari.
+Perubahan markup perlu penyesuaian locator; atribut hari khusus dari FE disarankan.
+
+Verifikasi skenario sebenarnya pada `http://ems.192.168.101.138.nip.io`, Chrome
+headed, build terkonfigurasi `v1.0.5-staging` (versi deployment belum diverifikasi):
+
+- Admin `2026-11-02T03-33-58-912Z-58c95e62`: **1 Pass, 0 Fail**.
+- PJ `2026-11-02T03-35-26-498Z-13dadb67`: **1 Pass, 0 Fail**.
+
+Total **2 Pass**. Kedua run memilih Selasa/Rabu (`repeatDays: [2,3]`), POST 201,
+repeatType weekly, No end dan field/selected days tetap setelah reload.
+Artifact `ts019-<role>-schedule.json` mencatat nama, ID, Room, waktu, hari dan
+status tanpa credential. Kedua response memberi ID berbeda; ini bukan bukti
+keunikan seluruh database atau eksekusi scheduler/perangkat pada hari pilihan.
+Data tetap ada dan dapat berbenturan dengan pengujian selanjutnya.
+
+Helper hari memakai WIB; empat unit test baru mencakup besok/lusa, pergantian
+minggu, tanggal UTC berbeda dan pergantian tahun. Pemeriksaan: **39 unit Pass**,
+syntax **65/65 valid**, formatting file terkait serta `git diff --check` lolos.
+`npm run check` masih Fail pada formatting Export Report yang sudah ada;
+`coverage:catalog` juga Fail karena map TS-027 menunjuk path FEAT-052 yang tidak
+tersedia. Entry TS-019/file/title diperiksa terpisah. Tidak mengubah dependency,
+auth adapter, Playwright, CI, atau snapshot status manual. Spec inspeksi sementara
+telah dihapus.
+
 ## Pisahkan Delete ke FEAT-030 / TS-021 — 30 Oktober 2026
 
 Permintaan pengguna: TS-017 dan TS-020 berhenti pada flow stepsSummary, dengan

@@ -2,7 +2,7 @@
 
 Cypress adalah framework utama untuk smoke dan regression UI EMS. Playwright menjadi pelengkap untuk API, mobile, dan responsive. Keduanya merupakan runner terpisah di satu proyek JavaScript, dengan kontrak aplikasi dan Test ID yang sama.
 
-Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, tambahan lokal **TS-124**, serta starter script untuk **24 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh skenario atau semua kondisi pada setiap skenario.
+Proyek ini memuat snapshot **123 skenario** dari Test Planning-EMS-2026, diambil 9 Oktober 2026, tambahan lokal **TS-124**, serta starter script untuk **25 Test ID**. Starter tersebut hanya mengimplementasikan subcakupan yang tercatat pada `catalog/automation-map.json`; bukan seluruh skenario atau semua kondisi pada setiap skenario.
 
 ## Mulai di VS Code lokal
 
@@ -200,6 +200,52 @@ Penghapusan merupakan flow tersendiri pada TS-021. Eksekusi perangkat tidak diuj
 npm.cmd run cy:run -- --spec cypress/e2e/FEAT-024-create-schedule/create-schedule.cy.js
 ```
 
+TS-019 / FEAT-027 memiliki tiga test terpisah untuk setiap role Admin/PJ yang
+terkonfigurasi. Setiap test membuat Schedule QA baru sendiri, sehingga Edit/Delete
+tidak bergantung pada hasil Create. ID mengikuti katalog: TS-010 tetap untuk notifikasi. Fixture
+`cypress/fixtures/schedules/repeat.json` mengatur prefix Room hasil TS-025 dan
+description; Room terbaru dipilih dengan resolver yang sama seperti TS-017.
+Nama Schedule menggunakan `QA-TS019-<role>-<ddMMyyyy-HHmmss>`.
+
+Flow: login → Schedule → Add schedule → nama unik dan description → Choose room
+→ Turn ON → start time +1 jam WIB → No end → Repeat on → pilih hari besok dan
+lusa berdasarkan waktu awal test → Add schedule. Pilihan hari adalah weekday
+mingguan, bukan tanggal sekali jalan: API menyimpan `repeatType: weekly` dan
+`repeatDays` 0–6 (Minggu–Sabtu). Perhitungan melewati batas minggu memakai WIB.
+
+Test memeriksa dua radio Duration Constraint, No end, repeat aktif dan tepat dua
+hari terpilih, POST 201, ID tidak kosong, payload serta data respons. Setelah
+reload, pencarian harus menghasilkan satu Schedule dengan Room/waktu yang benar;
+form dibuka kembali untuk memeriksa field dan hari repeat yang tersimpan.
+
+- Create: setelah validasi reload, coba membuat Schedule dengan nama berbeda tetapi
+  Room, action, waktu, No end dan hari sama. Harus ditolak dengan HTTP 409, pesan
+  konflik tampil, Schedule asal tetap ada dan nama duplikat tidak tersimpan.
+- Edit: buat data baru berakhiran `-edit` untuk hari +3, ubah description dan
+  tambahkan hari +4. PUT harus 200 dengan ID yang sama, kemudian periksa seluruh
+  field dan hari repeat setelah reload.
+- Delete: buat data baru berakhiran `-delete` untuk hari +5/+6, konfirmasi Delete,
+  periksa DELETE 204 ke ID tersebut dan nama tidak ditemukan setelah reload.
+
+Hari setup Edit/Delete dibedakan dari Create untuk mencegah ketiga test menyiapkan
+jadwal yang saling bentrok. Semua memakai Room hasil TS-025 yang tersedia dan
+start time +1 jam WIB. Create/Edit dipertahankan; hanya test Delete menghapus data
+yang dibuatnya sendiri. Tidak ada afterEach cleanup. Helper khusus skenario berada
+di `repeat-schedule.helpers.js`. Artifact per test disimpan sebagai
+`reports/runs/<runId>/ts019-<role>-<create|duplicate|edit|delete>.json`.
+Eksekusi scheduler, penghapusan instance historis/future dan keunikan ID seluruh
+database belum diuji. Run ulang tetap dapat berbenturan dengan data yang disimpan.
+
+UI saat ini hanya memberi tombol hari berlabel `M T W T F S S`, tanpa `data-testid`
+atau `aria-pressed`. Page Object memeriksa ketujuh label dan memakai urutan
+Senin–Minggu yang terverifikasi dari UI/source. Locator grid dan assertion kelas
+pilihan perlu diperbarui bila markup berubah; atribut hari khusus dari FE akan
+lebih stabil. Guard tanggal start time sama seperti TS-017.
+
+```powershell
+npm.cmd run cy:run -- --headed --spec cypress/e2e/FEAT-027-repeat-schedule/repeat-schedule.cy.js
+```
+
 TS-020 / FEAT-029 memakai Schedule TS-017 yang **sudah tersedia** di Upcoming untuk
 role tersebut, dengan prefix `QA-TS017-<role>-`. Test tidak membuat Schedule baru.
 Hanya description (`TS-020 Updated`) dan start time (+2 jam WIB dari awal test)
@@ -216,8 +262,10 @@ Upcoming, pilih Schedule QA milik role, buka Delete dan **No, cancel**, verifika
 tidak ada request DELETE/PUT/PATCH serta target tetap ada setelah reload. Buka
 Delete lagi dan **Yes, Delete**, periksa satu DELETE/204 serta target tidak
 ditemukan setelah reload. Schedule QA lain dalam hasil pencarian yang sama
-diperiksa tetap ada bila tersedia. Hanya nama berpola `QA-TS017-admin-...` atau
-`QA-TS017-pj-...` yang dapat dibuka untuk penghapusan melalui helper ini.
+diperiksa tetap ada bila tersedia. TS-021 tetap hanya memilih nama berpola
+`QA-TS017-admin-...` atau `QA-TS017-pj-...`. Guard helper Delete juga mengizinkan
+nama TS-019 berakhiran `-delete` untuk test repeat yang membuat datanya sendiri;
+nama TS-019 Create/Edit tidak diizinkan oleh helper tersebut.
 Target dan endpoint DELETE dicatat pada `reports/runs/<runId>/ts021-<role>-schedule.json`.
 
 ```powershell

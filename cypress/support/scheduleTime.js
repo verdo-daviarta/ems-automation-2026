@@ -1,3 +1,13 @@
+export function getScheduleRepeatDays(testStartedAt, dayOffsets = [1, 2]) {
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const today = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta',
+    weekday: 'short'
+  }).format(new Date(testStartedAt));
+  const day = weekdays.indexOf(today);
+  return dayOffsets.map((offset) => (day + offset) % 7).sort((first, second) => first - second);
+}
+
 export function getScheduleStartTime(testStartedAt, minutesFromStart = 60) {
   const startsAt = new Date(testStartedAt + minutesFromStart * 60 * 1000);
   const [date, time] = new Intl.DateTimeFormat('sv-SE', {

@@ -2,6 +2,15 @@ import { qa } from '../../support/settings.js';
 import { getLatestTestRoomName } from '../../support/latestTestRoom.js';
 
 const testSchedulePattern = /^QA-TS017-(admin|pj)-(?:\d{8}-\d{6}|\d{13})$/;
+const deletableSchedulePattern =
+  /^(?:QA-TS017-(?:admin|pj)-(?:\d{8}-\d{6}|\d{13})|QA-TS019-(?:admin|pj)-\d{8}-\d{6}-delete)$/;
+const repeatDayOrder = [1, 2, 3, 4, 5, 6, 0];
+
+function selectedRepeatDays(buttons) {
+  return repeatDayOrder
+    .filter((_, index) => buttons[index].classList.contains('border-emerald-500'))
+    .sort((first, second) => first - second);
+}
 
 function formValues(fields) {
   return fields.toArray().map((field) => ({
@@ -161,6 +170,51 @@ export class SchedulePage {
     return cy.get('[role="dialog"]').contains(/^Repeat off$/i);
   }
 
+  get repeatSwitch() {
+    return this.form.find('button[role="switch"]');
+  }
+
+  get repeatDayButtons() {
+    // UI hanya memberi inisial hari; urutan terverifikasi adalah Senin-Minggu.
+    return this.form.find('div.grid.grid-cols-2 > button').should(($buttons) => {
+      expect($buttons.toArray().map((button) => button.innerText.trim())).to.deep.eq([
+        'M',
+        'T',
+        'W',
+        'T',
+        'F',
+        'S',
+        'S'
+      ]);
+    });
+  }
+
+  selectRepeatDays(days) {
+    this.repeatSwitch.should('have.attr', 'aria-checked', 'false').click();
+    return this.setRepeatDays(days);
+  }
+
+  setRepeatDays(days) {
+    return this.repeatDayButtons.then(($buttons) => {
+      const selected = selectedRepeatDays($buttons);
+      for (const day of repeatDayOrder) {
+        if (selected.includes(day) !== days.includes(day)) {
+          this.repeatDayButtons.eq(repeatDayOrder.indexOf(day)).should('be.enabled').click();
+        }
+      }
+      return this.assertRepeatDays(days);
+    });
+  }
+
+  assertRepeatDays(days) {
+    this.repeatSwitch.should('have.attr', 'aria-checked', 'true');
+    this.repeatToggle.should('be.checked');
+    this.dialog.contains(/^Repeat on$/i).should('be.visible');
+    return this.repeatDayButtons.should(($buttons) => {
+      expect(selectedRepeatDays($buttons), 'hari repeat terpilih').to.deep.eq(days);
+    });
+  }
+
   submit() {
     cy.intercept({ method: 'POST', pathname: '/api/schedules' }).as('createSchedule');
     cy.get('[role="dialog"]')
@@ -170,7 +224,9 @@ export class SchedulePage {
   }
 
   openDeleteConfirmation(name) {
-    expect(name, 'hapus hanya Schedule uji hasil TS-017').to.match(testSchedulePattern);
+    expect(name, 'hapus hanya Schedule QA TS-017 atau data Delete khusus TS-019').to.match(
+      deletableSchedulePattern
+    );
     this.scheduleRow(name)
       .find('button[aria-label^="Delete schedule"]')
       .should('be.visible')

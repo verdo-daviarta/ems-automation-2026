@@ -186,6 +186,24 @@
       }
     },
     {
+      "testId": "TS-019",
+      "engine": "cypress",
+      "file": "cypress/e2e/FEAT-027-repeat-schedule/repeat-schedule.cy.js",
+      "implementedScope": "Tiga test independen per role Admin/PJ terkonfigurasi. Create mengikuti stepsSummary (Room TS-025 terbaru, Turn ON, +1 jam WIB, No end, repeat besok/lusa), POST 201 dan persistence field/hari setelah reload. Duplikat memakai nama berbeda tetapi Room/action/waktu/No end/hari sama: POST 409, toast bentrok memuat ID asal, record asal tetap dan nama duplikat tidak tersimpan. Edit membuat record baru -edit untuk hari +3, mengubah description dan menambah hari +4; PUT 200 dengan ID tetap dan hasil reload sesuai. Delete membuat record baru -delete untuk hari +5/+6, DELETE 204 ke ID sendiri dan nama hilang setelah reload. Create/Edit dipertahankan, tanpa afterEach cleanup. Helper setup/assertion khusus fitur dan artifact terpisah per role/test tanpa credential.",
+      "remainingScope": "Hari adalah weekday mingguan, bukan dua tanggal satu kali. Eksekusi scheduler/perangkat, penghapusan instance historis/future, daily, End at, keunikan ID global dan tanggal start lain belum diuji. Edit hanya description/repeatDays; rincian AC Final lainnya belum tersedia. Guard Delete tetap menerima TS-017 dan hanya pola TS-019 khusus -delete. Locator hari bergantung urutan Senin-Minggu/kelas selected karena atribut hari stabil belum tersedia. Room terbaru berdasarkan timestamp nama; data yang dipertahankan dapat menyebabkan konflik pada run berikutnya. Perubahan ini tidak mengubah TS-017/TS-020/TS-021 atau status manual katalog.",
+      "coverage": "starter-subscope",
+      "stagingVerification": "Pass",
+      "stagingEvidence": {
+        "target": "staging",
+        "baseURL": "http://ems.192.168.101.138.nip.io",
+        "buildId": "v1.0.5-staging",
+        "runId": "2026-11-02T04-09-13-193Z-d716eecc",
+        "adminRunId": "2026-11-02T04-08-22-026Z-49e5b8b2",
+        "roles": "admin,pj",
+        "scope": "Admin 3 Pass dan PJ 3 Pass, total 6 Pass pada dua run Chrome headed terpisah. Create/duplikat: 201 kemudian 409, toast live 'Jadwal bentrok dengan schedule lain' berisi ID asal, record asal tetap dan nama duplikat tidak ada setelah reload. Edit: record baru, PUT 200, ID tetap, description dan repeatDays [4,5] persist. Delete: record baru berbeda, DELETE 204 ke ID sendiri dan nama tidak ada setelah reload. Enam record setup memiliki ID berbeda; bukan audit global database. Artifact ts019-role-create/duplicate/edit/delete.json. Create/Edit dipertahankan, tanpa cleanup tersembunyi. Build dari konfigurasi; status manual tetap."
+      }
+    },
+    {
       "testId": "TS-020",
       "engine": "cypress",
       "file": "cypress/e2e/FEAT-029-edit-schedule/edit-schedule.cy.js",
